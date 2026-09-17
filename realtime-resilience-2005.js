@@ -87,7 +87,7 @@
 
   function start() {
     clearInterval(timer);
-    timer = setInterval(() => { if (document.visibilityState === 'visible') pollMessages(); }, 60000);
+    timer = setInterval(() => { if (!window.MessengerRealtimeHealth?.messages && document.visibilityState === 'visible') pollMessages(); }, 60000);
     pollMessages();
   }
 
