@@ -1,7 +1,7 @@
-/* Messenger Revival — 2005 conversation action toolbar: +20% visual scale without distortion */
-.retro-actionbar{height:100px!important;padding-top:5px!important}
-.retro-actionbar>button:not(.service-round){width:96px!important;height:91px!important;padding:1px 2px!important}
-.retro-actionbar>button:not(.service-round) img{width:60px!important;height:60px!important;object-fit:contain!important;margin:0 auto -2px!important}
-.retro-actionbar>button:not(.service-round) small{font-size:12px!important;line-height:15px!important;white-space:nowrap!important}
-/* Preserve the original MSN proportions; only the six main action controls are enlarged. */
-.conversation-shell{height:421px!important}
+/* Messenger Revival — conversation action toolbar enlarged another 20% without distortion */
+.retro-actionbar{height:116px!important;padding-top:5px!important}
+.retro-actionbar>button:not(.service-round){width:115px!important;height:109px!important;padding:1px 2px!important}
+.retro-actionbar>button:not(.service-round) img{width:72px!important;height:72px!important;object-fit:contain!important;margin:0 auto -2px!important}
+.retro-actionbar>button:not(.service-round) small{font-size:13px!important;line-height:16px!important;white-space:nowrap!important}
+/* Keep the outer chat window unchanged; reclaim the extra toolbar height from the conversation area. */
+.conversation-shell{height:405px!important}
