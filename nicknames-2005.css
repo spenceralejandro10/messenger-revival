@@ -1,0 +1,13 @@
+/* MSN 2005 nickname culture: decorative display names without changing the classic UI chrome. */
+.contact-copy strong,.to-line b,#chatTitle,.message-meta{font-family:Tahoma,"Arial Unicode MS","Segoe UI Symbol",Verdana,sans-serif}
+.contact-copy strong{font-size:12px;text-shadow:0 0 1px currentColor}
+.contact-item:nth-child(1) .contact-copy strong{color:#b01673}
+.contact-item:nth-child(2) .contact-copy strong{color:#6a2c91}
+.contact-item:nth-child(3) .contact-copy strong{color:#b45b00}
+.contact-item:nth-child(4) .contact-copy strong{color:#c52c3d}
+.contact-item:nth-child(5) .contact-copy strong{color:#247d63}
+.message-meta{font-size:12px;letter-spacing:.1px}
+.message:nth-child(3n+1) .message-meta{color:#b01673}
+.message:nth-child(3n+2) .message-meta{color:#6a2c91}
+.message:nth-child(3n) .message-meta{color:#b45b00}
+.message.mine .message-meta{color:#287b3b}
