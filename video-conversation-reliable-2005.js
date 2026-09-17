@@ -13,6 +13,7 @@
   let channel = null;
   let pollTimer = null;
   let polling = false;
+  let realtimeReady = false;
   let lastSignalId = 0;
   let call = null;
   let pc = null;
@@ -66,14 +67,14 @@
     return data || null;
   }
 
-  async function refreshVideoButton(peer = activePeer()) {
+  async function refreshVideoButton(peer = activePeer(), liveOverride = null) {
     if (!videoButton) return;
     if (!user || !peer || peer.id === user.id) {
       videoButton.disabled = true;
       videoButton.title = !peer ? 'Abre una conversación para iniciar una videollamada' : 'No puedes llamarte a ti mismo';
       return;
     }
-    const live = await getLivePeerPresence(peer.id);
+    const live = liveOverride?.id === peer.id ? liveOverride : await getLivePeerPresence(peer.id);
     const online = isPresenceOnline(live);
     videoButton.disabled = !online;
     videoButton.title = online ? 'Iniciar videollamada' : 'Este contacto está desconectado';
@@ -465,7 +466,9 @@
 
   function startPolling() {
     clearInterval(pollTimer);
-    pollTimer = setInterval(pollSignals, 650);
+    pollTimer = setInterval(() => {
+      if (!realtimeReady && document.visibilityState === 'visible') pollSignals();
+    }, 15000);
     pollSignals();
   }
 
@@ -480,7 +483,12 @@
         filter: `recipient_id=eq.${user.id}`,
       }, payload => handleSignal(payload.new).catch(error => console.warn('Video signal failed', error)))
       .subscribe(status => {
-        if (status === 'SUBSCRIBED') pollSignals();
+        if (status === 'SUBSCRIBED') {
+          realtimeReady = true;
+          pollSignals();
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          realtimeReady = false;
+        }
       });
   }
 
@@ -488,6 +496,7 @@
     clearInterval(pollTimer);
     pollTimer = null;
     polling = false;
+    realtimeReady = false;
     if (channel && client) client.removeChannel?.(channel);
     channel = null;
     processed.clear();
@@ -516,7 +525,7 @@
   window.addEventListener('messenger-revival:conversation-opened', event => refreshVideoButton(event.detail?.peer));
   window.addEventListener('messenger-revival:profile-updated', event => {
     const peer = activePeer();
-    if (peer?.id && event.detail?.id === peer.id) refreshVideoButton(peer);
+    if (peer?.id && event.detail?.id === peer.id) refreshVideoButton(peer, event.detail);
   });
   window.addEventListener('messenger-revival:auth-signed-out', () => {
     videoButton.disabled = true;
