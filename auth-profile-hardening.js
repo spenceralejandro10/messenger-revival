@@ -1,0 +1,4 @@
+(()=>{const KEY='messenger-revival:remembered-account';function patchRemembered(p,email){try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(!r)return;localStorage.setItem(KEY,JSON.stringify({...r,email:email||r.email,display_name:p?.display_name||r.display_name,display_picture:p?.display_picture||r.display_picture||''}))}catch{}}
+async function refresh(){const s=window.MessengerSession,c=s?.client,u=s?.user;if(!c||!u)return null;const {data}=await c.from('profiles').select('display_name,display_picture').eq('id',u.id).maybeSingle();if(data){patchRemembered(data,u.email);if(s.profile)Object.assign(s.profile,data)}return data}
+function wrapLogout(){const a=window.MessengerAuth;if(!a||a.__profileWrapped)return;a.__profileWrapped=true;const original=a.signOut;a.signOut=async()=>{await refresh().catch(()=>{});return original?.()}}
+window.addEventListener('messenger-revival:auth-ready',async()=>{await refresh().catch(()=>{});wrapLogout()});})();
