@@ -107,8 +107,63 @@
     if (soundOn) unlockAudio();
   }
 
+  const incomingNudges = new Set();
+
+  function shakeWindow(node) {
+    if (!node) return;
+    node.classList.remove('nudging');
+    void node.offsetWidth;
+    node.classList.add('nudging');
+    clearTimeout(node.__msnNudgeTimer);
+    node.__msnNudgeTimer = setTimeout(() => node.classList.remove('nudging'), 1100);
+  }
+
+  function nudgeToast(text) {
+    const node = document.querySelector('#toast');
+    if (!node) return;
+    node.textContent = text;
+    node.classList.add('show');
+    clearTimeout(window.__incomingNudgeToast);
+    window.__incomingNudgeToast = setTimeout(() => node.classList.remove('show'), 3200);
+  }
+
+  function receiveNudge(detail = {}) {
+    const id = detail.id ? String(detail.id) : '';
+    if (id && incomingNudges.has(id)) return false;
+    if (id) {
+      incomingNudges.add(id);
+      if (incomingNudges.size > 250) {
+        const oldest = incomingNudges.values().next().value;
+        incomingNudges.delete(oldest);
+      }
+    }
+
+    const active = Boolean(detail.active);
+    const chat = document.querySelector('#chatWindow');
+    const buddy = document.querySelector('#buddyWindow');
+    const target = active && chat && chat.style.display !== 'none' ? chat : buddy;
+    shakeWindow(target);
+    if (target !== chat && chat && chat.style.display !== 'none') shakeWindow(chat);
+
+    const who = detail.who || 'Un contacto';
+    nudgeToast(`${who} te envió un zumbido.`);
+    const played = scheduleTone(nudgeTone);
+    if (!played) unlockAudio();
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try { new Notification('Messenger Revival', { body: `${who} te envió un zumbido.` }); } catch {}
+    }
+    document.title = `⚡ ${who} — Messenger Revival`;
+    return true;
+  }
+
   window.unlockAudio = unlockAudio;
   window.playNudge = () => scheduleTone(nudgeTone);
+  window.MessengerNudges = {
+    receive: receiveNudge,
+    shake: shakeWindow,
+    hasSeen: id => incomingNudges.has(String(id || '')),
+  };
   window.MessengerSounds = {
     unlock: unlockAudio,
     playMessage: () => scheduleTone(messageTone),
@@ -124,7 +179,8 @@
     event.preventDefault();
     setEnabled(!soundOn);
   }, true);
-  window.addEventListener('messenger-revival:auth-ready', syncToggle);
+  window.addEventListener('messenger-revival:auth-ready', () => { syncToggle(); unlockAudio(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') unlockAudio(); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncToggle);
   else syncToggle();
 })();
