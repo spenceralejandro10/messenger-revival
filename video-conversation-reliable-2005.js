@@ -45,6 +45,40 @@
     return window.MessengerChat?.getActivePeer?.() || null;
   }
 
+  function isPresenceOnline(p) {
+    if (!p) return false;
+    if (window.MessengerPresence?.isOnline) return window.MessengerPresence.isOnline(p);
+    if (p.status === 'offline') return false;
+    const seen = p.last_seen_at ? new Date(p.last_seen_at).getTime() : 0;
+    return !!seen && Date.now() - seen <= 15000;
+  }
+
+  async function getLivePeerPresence(peerId) {
+    if (!client || !peerId) return null;
+    const { data, error } = await client.from('profiles')
+      .select('id,email,display_name,status,last_seen_at')
+      .eq('id', peerId)
+      .maybeSingle();
+    if (error) {
+      console.warn('Could not verify contact presence', error);
+      return null;
+    }
+    return data || null;
+  }
+
+  async function refreshVideoButton(peer = activePeer()) {
+    if (!videoButton) return;
+    if (!user || !peer || peer.id === user.id) {
+      videoButton.disabled = true;
+      videoButton.title = !peer ? 'Abre una conversación para iniciar una videollamada' : 'No puedes llamarte a ti mismo';
+      return;
+    }
+    const live = await getLivePeerPresence(peer.id);
+    const online = isPresenceOnline(live);
+    videoButton.disabled = !online;
+    videoButton.title = online ? 'Iniciar videollamada' : 'Este contacto está desconectado';
+  }
+
   function addSystem(text) {
     const row = document.createElement('div');
     row.className = 'message msn-system-event';
@@ -283,6 +317,12 @@
     if (peer.id === user.id) return toast('No puedes iniciar una videollamada contigo mismo.');
     if (call) return toast('Ya tienes una videollamada en curso.');
 
+    const livePresence = await getLivePeerPresence(peer.id);
+    if (!isPresenceOnline(livePresence)) {
+      await refreshVideoButton(peer);
+      return toast(`${peer.display_name || peer.email || 'El contacto'} está desconectado. No se puede iniciar una videollamada.`);
+    }
+
     call = {
       id: crypto.randomUUID(),
       peerId: peer.id,
@@ -296,7 +336,13 @@
     } catch (error) {
       call = null;
       hideBanner();
-      toast(error.message || 'No se pudo enviar la invitación.');
+      const message = String(error?.message || '');
+      if (message.includes('RECIPIENT_OFFLINE')) {
+        await refreshVideoButton(peer);
+        toast(`${peer.display_name || peer.email || 'El contacto'} está desconectado. No se puede iniciar una videollamada.`);
+      } else {
+        toast(message || 'No se pudo enviar la invitación.');
+      }
     }
   }
 
@@ -461,12 +507,22 @@
     await ensureRealtimeAuth();
     subscribe();
     startPolling();
+    refreshVideoButton();
   }
 
   videoButton.onclick = invite;
   controls.querySelector('#endVideoReliable2005').onclick = () => finish(true);
   window.addEventListener('messenger-revival:auth-ready', init);
-  window.addEventListener('messenger-revival:auth-signed-out', cleanupSession);
+  window.addEventListener('messenger-revival:conversation-opened', event => refreshVideoButton(event.detail?.peer));
+  window.addEventListener('messenger-revival:profile-updated', event => {
+    const peer = activePeer();
+    if (peer?.id && event.detail?.id === peer.id) refreshVideoButton(peer);
+  });
+  window.addEventListener('messenger-revival:auth-signed-out', () => {
+    videoButton.disabled = true;
+    videoButton.title = 'Inicia sesión para usar videollamadas';
+    cleanupSession();
+  });
   window.addEventListener('online', () => {
     if (!user) return;
     ensureRealtimeAuth().then(() => subscribe()).catch(() => {});
