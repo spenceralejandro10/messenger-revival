@@ -1,1 +1,1 @@
-window.MESSENGER_SUPABASE={url:'',publishableKey:'',displayPicturesBucket:'display-pictures'};
+window.MESSENGER_SUPABASE={url:'https://ctjnmludmchanvjbqiai.supabase.co',publishableKey:'sb_publishable_06n9OZZsl1UXPAlKu5eugQ_DxXYODzm',displayPicturesBucket:'display-pictures'};
