@@ -1,0 +1,1 @@
+window.MESSENGER_SUPABASE={url:'',publishableKey:'',displayPicturesBucket:'display-pictures'};
