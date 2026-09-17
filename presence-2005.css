@@ -8,3 +8,6 @@
 .person-icon.offline,.person-icon.invisible{background-image:url('assets/status-icons/01-disponible-online.png')!important;filter:grayscale(1)!important;opacity:.42!important}
 .contact-item>.person-icon{margin-right:1px!important}
 .to-line .person-icon{margin-left:3px!important;width:16px!important;height:16px!important;min-width:16px!important;flex-basis:16px!important}
+
+/* The historical status selector owns the self-status icon; hide the legacy dot to avoid duplicate indicators. */
+#selfStatusDot{display:none!important}
