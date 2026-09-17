@@ -3,9 +3,13 @@
 /* Real-account presence indicators: replace generic colored dots with the classic MSN 2005 artwork. */
 .person-icon{display:inline-block!important;width:18px!important;height:18px!important;min-width:18px!important;flex:0 0 18px!important;font-size:0!important;line-height:0!important;color:transparent!important;background-repeat:no-repeat!important;background-position:center!important;background-size:contain!important;vertical-align:middle!important;filter:none;opacity:1}
 .person-icon.online{background-image:url('assets/status-icons/01-disponible-online.png')!important}
-.person-icon.busy,.person-icon.phone{background-image:url('assets/status-icons/02-ocupado-busy.png')!important}
-.person-icon.away,.person-icon.brb,.person-icon.lunch{background-image:url('assets/status-icons/03-ausente-away-reloj.png')!important}
-.person-icon.offline,.person-icon.invisible{background-image:url('assets/status-icons/01-disponible-online.png')!important;filter:grayscale(1)!important;opacity:.42!important}
+.person-icon.busy{background-image:url('assets/status-icons/02-ocupado-busy.png')!important}
+.person-icon.away{background-image:url('assets/status-icons/03-ausente-away-reloj.png')!important}
+.person-icon.brb{background-image:url('assets/status-icons/09-vuelvo-enseguida-brb.svg')!important}
+.person-icon.phone{background-image:url('assets/status-icons/10-al-telefono-phone.svg')!important}
+.person-icon.lunch{background-image:url('assets/status-icons/11-sali-a-comer-lunch.svg')!important}
+.person-icon.invisible{background-image:url('assets/status-icons/12-aparecer-desconectado-invisible.svg')!important;opacity:.72!important}
+.person-icon.offline{background-image:url('assets/status-icons/01-disponible-online.png')!important;filter:grayscale(1)!important;opacity:.42!important}
 .contact-item>.person-icon{margin-right:1px!important}
 .to-line .person-icon{margin-left:3px!important;width:16px!important;height:16px!important;min-width:16px!important;flex-basis:16px!important}
 
