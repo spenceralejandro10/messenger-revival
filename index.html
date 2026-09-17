@@ -1,103 +1,29 @@
 <!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Messenger Revival — tributo web a la era clásica de la mensajería instantánea." />
-  <title>Messenger Revival</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Messenger Revival</title><link rel="stylesheet" href="styles.css"></head>
 <body>
-  <main class="desktop-shell">
-    <section class="buddy-window glass" aria-label="Lista de contactos">
-      <header class="titlebar">
-        <div class="brand-dot" aria-hidden="true"></div>
-        <strong>Messenger Revival</strong>
-        <div class="window-actions" aria-hidden="true">
-          <button>—</button><button>□</button><button>×</button>
-        </div>
-      </header>
+<div id="desktop" class="desktop">
+  <div class="desktop-note">Messenger Revival <span>• un tributo independiente a la era 2005</span></div>
 
-      <div class="profile-card">
-        <div class="avatar avatar-main" aria-hidden="true">S</div>
-        <div class="profile-copy">
-          <input id="displayName" class="name-input" value="Spencer" aria-label="Tu apodo" />
-          <select id="statusSelect" aria-label="Tu estado">
-            <option value="online">Disponible</option>
-            <option value="away">Ausente</option>
-            <option value="busy">Ocupado</option>
-          </select>
-        </div>
-        <span id="selfStatusDot" class="status-dot online" title="Estado actual"></span>
-      </div>
+  <section id="buddyWindow" class="xp-window buddy-window">
+    <header class="xp-titlebar drag-handle"><span class="retro-logo">●●</span><b>Messenger Revival</b><div class="win-buttons"><button>_</button><button>□</button><button>×</button></div></header>
+    <nav class="menu-bar">Archivo&nbsp;&nbsp; Contactos&nbsp;&nbsp; Acciones&nbsp;&nbsp; Herramientas&nbsp;&nbsp; Ayuda</nav>
+    <div class="passport-strip">Messenger <b>Revival</b> <span>2005 edition</span></div>
+    <div class="me-panel"><div class="display-pic me-pic">S</div><div class="me-copy"><input id="displayName" value="Spencer"><div class="status-row"><span id="selfStatusDot" class="person-icon online">●</span><select id="statusSelect"><option value="online">Disponible</option><option value="away">Ausente</option><option value="busy">Ocupado</option></select></div><input class="personal-message" value="♫ Reviviendo el Messenger..." aria-label="Mensaje personal"></div></div>
+    <div class="action-strip"><button id="newChatBtn">✉ Enviar mensaje</button><button id="randomNickBtn">☺ Cambiar apodo</button></div>
+    <div class="search-wrap"><input id="contactSearch" placeholder="Buscar un contacto..."></div>
+    <div class="group-title">▼ Conectados (<span id="onlineCounter">0</span>)</div><ul id="contactList" class="contact-list"></ul>
+    <div class="group-title muted">▶ No conectados (12)</div>
+    <footer class="ad-panel"><b>Messenger Revival</b><br><span>La nostalgia ha iniciado sesión.</span></footer>
+  </section>
 
-      <div class="toolbar">
-        <button id="newChatBtn" class="toolbar-btn">💬 Nuevo chat</button>
-        <button id="randomNickBtn" class="toolbar-btn">🎲 Apodo</button>
-      </div>
+  <section id="chatWindow" class="xp-window chat-window">
+    <header class="xp-titlebar drag-handle"><span class="retro-logo">●●</span><b id="chatTitle">Alex - Conversación</b><div class="win-buttons"><button>_</button><button>□</button><button>×</button></div></header>
+    <nav class="menu-bar">Archivo&nbsp;&nbsp; Editar&nbsp;&nbsp; Acciones&nbsp;&nbsp; Herramientas&nbsp;&nbsp; Ayuda</nav>
+    <div class="chat-toolbar"><button>☏<span>Llamar</span></button><button>▣<span>Video</span></button><button>📁<span>Enviar archivo</span></button><button>🎮<span>Juegos</span></button><button id="nudgeBtn">⚡<span>Zumbido</span></button></div>
+    <div class="chat-body"><div class="conversation-column"><div class="conversation-caption"><span id="chatStatusDot" class="person-icon online">●</span> Conversación con <b id="chatInfoName">Alex</b></div><div id="messagePane" class="message-pane"></div><div class="format-bar"><button><b>B</b></button><button><i>I</i></button><button><u>U</u></button><span class="divider"></span><button class="emoji-btn" data-emoji="😀">😀</button><button class="emoji-btn" data-emoji="😂">😂</button><button class="emoji-btn" data-emoji="❤️">❤️</button><button class="emoji-btn" data-emoji="😎">😎</button></div><form id="messageForm" class="composer"><textarea id="messageInput" placeholder="Escribe un mensaje..."></textarea><button class="send-btn">Enviar</button></form></div><aside class="picture-rail"><div class="display-pic contact-pic" id="chatAvatar">A</div><div class="pic-label">Imagen para mostrar</div><div class="display-pic me-small">S</div></aside></div>
+    <footer class="chat-status">● <span id="chatSubtitle">Disponible</span> &nbsp; | &nbsp; Pulsa Enter para enviar</footer>
+  </section>
 
-      <div class="search-wrap">
-        <input id="contactSearch" type="search" placeholder="Buscar contacto…" aria-label="Buscar contacto" />
-      </div>
-
-      <div class="section-label">
-        <span>Contactos conectados</span>
-        <span id="onlineCounter">0</span>
-      </div>
-
-      <ul id="contactList" class="contact-list" aria-label="Contactos"></ul>
-
-      <footer class="buddy-footer">
-        <span>🟢 En línea</span>
-        <span>Messenger Revival v0.1</span>
-      </footer>
-    </section>
-
-    <section id="chatWindow" class="chat-window glass" aria-label="Ventana de conversación">
-      <header class="titlebar chat-titlebar">
-        <div class="contact-heading">
-          <span id="chatStatusDot" class="status-dot online"></span>
-          <div>
-            <strong id="chatTitle">Alex</strong>
-            <small id="chatSubtitle">Disponible</small>
-          </div>
-        </div>
-        <div class="window-actions" aria-hidden="true">
-          <button>—</button><button>□</button><button>×</button>
-        </div>
-      </header>
-
-      <div class="conversation-info">
-        <div id="chatAvatar" class="avatar avatar-contact">A</div>
-        <div>
-          <strong id="chatInfoName">Alex</strong>
-          <span>está conectado.</span>
-        </div>
-      </div>
-
-      <div id="messagePane" class="message-pane" aria-live="polite"></div>
-
-      <div class="composer-tools" aria-label="Herramientas de mensaje">
-        <button class="emoji-btn" data-emoji="😀">😀</button>
-        <button class="emoji-btn" data-emoji="😂">😂</button>
-        <button class="emoji-btn" data-emoji="❤️">❤️</button>
-        <button class="emoji-btn" data-emoji="😎">😎</button>
-        <button class="emoji-btn" data-emoji="👋">👋</button>
-        <button id="nudgeBtn" class="nudge-btn" title="Enviar zumbido">⚡ Zumbido</button>
-      </div>
-
-      <form id="messageForm" class="composer">
-        <textarea id="messageInput" rows="3" maxlength="500" placeholder="Escribe un mensaje…" aria-label="Escribir mensaje"></textarea>
-        <button class="send-btn" type="submit">Enviar</button>
-      </form>
-
-      <footer class="chat-footer">
-        <span>🔒 Demo local — tus mensajes quedan guardados en este navegador.</span>
-      </footer>
-    </section>
-  </main>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js"></script>
-</body>
-</html>
+  <div class="taskbar"><button class="start-btn">▰ inicio</button><div class="task-item">●● Messenger Revival</div><div class="tray">🔊 🟢 <span id="clock"></span></div></div>
+  <div id="toast" class="toast"></div>
+</div><script src="app.js"></script></body></html>
