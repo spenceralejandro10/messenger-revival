@@ -4,7 +4,7 @@ let client=null,user=null,activeGroup=null,groupChannel=null,membershipChannel=n
 let profiles=new Map(),seen=new Set(),followLatest=true;
 let membershipTimer=null,messageTimer=null,pollingMemberships=false,pollingMessages=false;
 let knownMemberships=new Set(),knownMessageIds=new Set(),bootstrappedGroups=false,bootstrappedMessages=false;
-let groupSummaries=[];
+let groupSummaries=[],groupRealtimeReady=false,messageCursor=null;
 
 function toast(t){
   const e=$('#toast');if(!e)return;
@@ -213,6 +213,7 @@ async function pollMemberships(){
     const {data,error}=await client.from('group_conversation_members').select('conversation_id,joined_at,invited_by').eq('user_id',user.id).order('joined_at',{ascending:false});
     if(error)throw error;
     const rows=data||[],current=new Set(rows.map(r=>r.conversation_id));
+    let changed=!bootstrappedGroups||current.size!==knownMemberships.size||[...current].some(id=>!knownMemberships.has(id));
     if(!bootstrappedGroups){
       knownMemberships=current;bootstrappedGroups=true;
     }else{
@@ -226,43 +227,54 @@ async function pollMemberships(){
       }
       for(const id of [...knownMemberships])if(!current.has(id))knownMemberships.delete(id);
     }
-    groupSummaries=await fetchGroupSummaries();paintGroupList();updateGroupButton();
-  }catch(e){console.warn('Group membership polling failed',e)}finally{pollingMemberships=false}
+    if(changed){groupSummaries=await fetchGroupSummaries();paintGroupList();updateGroupButton()}
+  }catch(e){console.warn('Group membership fallback failed',e)}finally{pollingMemberships=false}
+}
+function handleGroupFeedMessage(m){
+  if(!m?.id||knownMessageIds.has(m.id))return;
+  knownMessageIds.add(m.id);
+  if(m.created_at&&(!messageCursor||new Date(m.created_at)>new Date(messageCursor)))messageCursor=m.created_at;
+  const summary=groupSummaries.find(g=>g.id===m.conversation_id);if(summary)summary.last=m;
+  if(m.conversation_id===activeGroup){appendMessage(m);if(m.sender_id!==user.id)window.MessengerSounds?.playMessage?.()}
+  else if(m.sender_id!==user.id){
+    toast('Nuevo mensaje en una conversación de grupo');
+    window.MessengerSounds?.playMessage?.();
+    if('Notification'in window&&Notification.permission==='granted')new Notification('Messenger Revival',{body:'Nuevo mensaje en una conversación de grupo.'});
+    document.title='● Grupo — Messenger Revival';
+  }
+  paintGroupList();updateGroupButton();
 }
 async function pollGroupMessages(){
   if(!client||!user||pollingMessages)return;pollingMessages=true;
   try{
-    const {data,error}=await client.from('group_messages').select('id,conversation_id,sender_id,kind,body,format,created_at').order('created_at',{ascending:false}).limit(150);
-    if(error)throw error;
-    const rows=(data||[]).slice().reverse();
-    if(!bootstrappedMessages){rows.forEach(m=>knownMessageIds.add(m.id));bootstrappedMessages=true;return}
-    for(const m of rows){
-      if(knownMessageIds.has(m.id))continue;knownMessageIds.add(m.id);
-      if(m.conversation_id===activeGroup){appendMessage(m);if(m.sender_id!==user.id)window.MessengerSounds?.playMessage?.()}
-      else if(m.sender_id!==user.id){
-        toast('Nuevo mensaje en una conversación de grupo');
-        window.MessengerSounds?.playMessage?.();
-        if('Notification'in window&&Notification.permission==='granted')new Notification('Messenger Revival',{body:'Nuevo mensaje en una conversación de grupo.'});
-        document.title='● Grupo — Messenger Revival';
-      }
-    }
-    if(rows.length)groupSummaries=await fetchGroupSummaries();
-    paintGroupList();updateGroupButton();
-  }catch(e){console.warn('Group message polling failed',e)}finally{pollingMessages=false}
+    let q=client.from('group_messages').select('id,conversation_id,sender_id,kind,body,format,created_at').order('created_at',{ascending:true}).limit(100);
+    const since=messageCursor||new Date(Date.now()-10000).toISOString();q=q.gt('created_at',since);
+    const {data,error}=await q;if(error)throw error;
+    const rows=data||[];for(const m of rows)handleGroupFeedMessage(m);
+    if(!bootstrappedMessages){bootstrappedMessages=true}
+  }catch(e){console.warn('Group message fallback failed',e)}finally{pollingMessages=false}
 }
 function startPolling(){
   clearInterval(membershipTimer);clearInterval(messageTimer);
-  membershipTimer=setInterval(pollMemberships,1000);messageTimer=setInterval(pollGroupMessages,900);
+  membershipTimer=setInterval(()=>{if(!groupRealtimeReady&&document.visibilityState==='visible')pollMemberships()},60000);
+  messageTimer=setInterval(()=>{if(!groupRealtimeReady&&document.visibilityState==='visible')pollGroupMessages()},60000);
   pollMemberships();pollGroupMessages();
 }
 function stopPolling(){clearInterval(membershipTimer);clearInterval(messageTimer);membershipTimer=messageTimer=null;pollingMemberships=pollingMessages=false}
 function subscribeMembership(){
   if(membershipChannel&&client)client.removeChannel?.(membershipChannel);
+  groupRealtimeReady=false;
   membershipChannel=client.channel(`group-membership-${user.id}-${crypto.randomUUID()}`)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'group_conversation_members',filter:`user_id=eq.${user.id}`},async p=>{
-      const id=p.new?.conversation_id;if(!id)return;knownMemberships.add(id);await pollMemberships();
+      const id=p.new?.conversation_id;if(!id)return;knownMemberships.add(id);
+      groupSummaries=await fetchGroupSummaries();paintGroupList();updateGroupButton();
       if(id!==activeGroup){toast('Te agregaron a una conversación de grupo');window.MessengerSounds?.playMessage?.();setTimeout(()=>openGroup(id),160)}
-    }).subscribe();
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'group_messages'},p=>handleGroupFeedMessage(p.new))
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED'){groupRealtimeReady=true;pollMemberships();pollGroupMessages()}
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')groupRealtimeReady=false;
+    });
 }
 async function recoverRecentInvite(){
   const {data}=await client.from('group_conversation_members').select('conversation_id,joined_at').eq('user_id',user.id).order('joined_at',{ascending:false}).limit(1);
@@ -276,12 +288,12 @@ function installDirectInvite(){
 async function init(ev){
   user=ev?.detail?.user||window.MessengerSession?.user;client=window.MessengerSession?.client;if(!user||!client)return;
   style();inviteDialog();listDialog();groupWindow();ensureGroupButton();installDirectInvite();
-  knownMemberships.clear();knownMessageIds.clear();bootstrappedGroups=false;bootstrappedMessages=false;
+  knownMemberships.clear();knownMessageIds.clear();bootstrappedGroups=false;bootstrappedMessages=false;messageCursor=new Date(Date.now()-10000).toISOString();groupRealtimeReady=false;
   await ensureRealtimeAuth();subscribeMembership();startPolling();recoverRecentInvite();
 }
 function cleanup(){
   stopPolling();if(groupChannel&&client)client.removeChannel?.(groupChannel);if(membershipChannel&&client)client.removeChannel?.(membershipChannel);
-  groupChannel=null;membershipChannel=null;activeGroup=null;profiles.clear();seen.clear();knownMemberships.clear();knownMessageIds.clear();groupSummaries=[];bootstrappedGroups=false;bootstrappedMessages=false;client=null;user=null;
+  groupChannel=null;membershipChannel=null;activeGroup=null;profiles.clear();seen.clear();knownMemberships.clear();knownMessageIds.clear();groupSummaries=[];bootstrappedGroups=false;bootstrappedMessages=false;groupRealtimeReady=false;messageCursor=null;client=null;user=null;
   const w=$('#groupChatWindow');if(w)w.style.display='none';const d=$('#groupListDialog');if(d)d.hidden=true;updateGroupButton();
 }
 style();inviteDialog();listDialog();groupWindow();installDirectInvite();
