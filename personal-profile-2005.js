@@ -66,7 +66,12 @@ function ensureDialog(){
  $('#mpClose').onclick=close;
  $('#mpCancel').onclick=close;
  $('#mpSave').onclick=saveOwn;
- $('#mpChangePhoto').onclick=()=>{close();$('#openDisplayPicturesChat')?.click()};
+ $('#mpChangePhoto').onclick=()=>{
+   const me=window.MessengerSession?.user;
+   const allowed=currentMode==='edit'&&!!me&&currentProfile?.id===me.id;
+   if(!allowed){toast('Solo puedes cambiar la imagen de tu propia cuenta.');return}
+   close();$('#openDisplayPictures')?.click();
+ };
  return dialog;
 }
 function fillSelect(el,map){
@@ -133,7 +138,7 @@ async function openContactProfile(){
  currentProfile=profile;currentDetails=details;
  $('#mpTitle').textContent=`Perfil de ${profile.display_name||profile.email||'contacto'}`;
  $('#mpSectionTitle').textContent='Información del contacto';
- $('#mpView').hidden=false;$('#mpEdit').hidden=true;$('#mpSave').hidden=true;$('#mpChangePhoto').hidden=true;
+ $('#mpView').hidden=false;$('#mpEdit').hidden=true;$('#mpSave').hidden=true;$('#mpChangePhoto').hidden=true;$('#mpChangePhoto').style.display='none';
  putPhoto(profile);renderView(profile,details);$('#mpStatus').textContent='';dialog.hidden=false;
 }
 async function openOwnProfile(){
@@ -145,7 +150,7 @@ async function openOwnProfile(){
  currentProfile=profile;currentDetails=details;
  $('#mpTitle').textContent='Mi perfil personal';
  $('#mpSectionTitle').textContent='Editar mi información';
- $('#mpView').hidden=true;$('#mpEdit').hidden=false;$('#mpSave').hidden=false;$('#mpChangePhoto').hidden=false;
+ $('#mpView').hidden=true;$('#mpEdit').hidden=false;$('#mpSave').hidden=false;$('#mpChangePhoto').hidden=false;$('#mpChangePhoto').style.display='block';
  putPhoto(profile);renderEdit(profile,details);$('#mpStatus').textContent='';dialog.hidden=false;
 }
 async function saveOwn(){
