@@ -1,1 +1,62 @@
 .msn-window.window-minimized{height:32px!important;min-height:32px!important;overflow:hidden!important}.msn-window.window-maximized{position:fixed!important;inset:0!important;left:0!important;top:0!important;width:100%!important;height:100vh!important;height:100dvh!important;box-sizing:border-box!important;max-width:none!important;max-height:none!important;margin:0!important;z-index:900!important}.chat-window.window-maximized{display:flex!important;flex-direction:column!important}.chat-window.window-maximized>.titlebar,.chat-window.window-maximized>.menubar,.chat-window.window-maximized>.actionbar,.chat-window.window-maximized>.promo-bar{flex:0 0 auto}.chat-window.window-maximized>.conversation-shell{flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow:hidden}.chat-window.window-maximized .conversation-main{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important}.chat-window.window-maximized .to-line{flex:0 0 auto}.chat-window.window-maximized .message-pane{flex:1 1 auto!important;height:auto!important;min-height:100px!important;overflow-y:auto!important}.chat-window.window-maximized .compose-toolbar{flex:0 0 auto}.chat-window.window-maximized .composer{flex:0 0 126px!important;height:126px!important;min-height:126px!important}.chat-window.window-maximized .ink-tabs{flex:0 0 auto}.buddy-window.window-maximized{overflow:auto!important}.buddy-window .menubar{overflow:visible!important}.buddy-window .retro-menu{max-width:calc(100vw - 12px)}.buddy-window .menu-root:nth-last-child(-n+2) .retro-menu{left:auto;right:0}.retro-menu{width:max-content;max-width:320px}.retro-menu-item{overflow:visible;min-width:max-content}.caption-buttons button{cursor:pointer}.caption-buttons button:hover{filter:brightness(1.08)}.msn-restore-dock{position:fixed;left:10px;bottom:10px;z-index:950;display:flex;gap:5px;max-width:calc(100vw - 20px);padding:4px;background:linear-gradient(#eaf6fe,#c9e6f7);border:1px solid #5f8eae;box-shadow:1px 2px 5px #173d5d66;font:11px Tahoma,Verdana,Arial,sans-serif}.msn-restore-dock[hidden]{display:none}.msn-restore-dock button{height:27px;max-width:220px;padding:2px 12px;border:1px solid #7f9db9;background:linear-gradient(#fff,#dcebf5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11px Tahoma,Verdana,Arial,sans-serif;cursor:pointer}.msn-restore-dock button:hover{background:linear-gradient(#fff,#cde5f4)}
+
+/* Full-screen conversation polish: keep the classic compact layout untouched,
+   but use the extra screen space for larger display pictures instead of a
+   large empty rail between the contact and self pictures. */
+.chat-window.window-maximized .display-rail:not(.video-call){
+  width:clamp(220px,17vw,280px)!important;
+  min-width:clamp(220px,17vw,280px)!important;
+  padding:10px 12px 8px 14px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  align-items:stretch!important;
+  gap:18px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+.chat-window.window-maximized .display-rail:not(.video-call) .avatar-frame{
+  position:static!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  width:100%!important;
+  height:auto!important;
+  margin:0!important;
+  padding:9px!important;
+  flex:0 0 auto!important;
+}
+.chat-window.window-maximized .display-rail:not(.video-call) .avatar-frame.bottom{
+  position:static!important;
+  left:auto!important;
+  bottom:auto!important;
+  margin:0!important;
+}
+.chat-window.window-maximized .display-rail:not(.video-call) .contact-pic,
+.chat-window.window-maximized .display-rail:not(.video-call) .me-small{
+  width:100%!important;
+  height:auto!important;
+  aspect-ratio:1/1!important;
+  max-height:none!important;
+}
+.chat-window.window-maximized .display-rail:not(.video-call) .rail-arrow{
+  width:100%!important;
+  margin-top:3px!important;
+}
+.chat-window.window-maximized .display-rail:not(.video-call) .profile-avatar-image,
+.chat-window.window-maximized .display-rail:not(.video-call) #chatAvatar>img,
+.chat-window.window-maximized .display-rail:not(.video-call) #selfAvatarChat>img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+@media(max-height:700px){
+  .chat-window.window-maximized .display-rail:not(.video-call){
+    width:clamp(190px,15vw,240px)!important;
+    min-width:clamp(190px,15vw,240px)!important;
+    gap:10px!important;
+    padding-top:7px!important;
+  }
+}
