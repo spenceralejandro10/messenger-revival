@@ -1,7 +1,6 @@
 /* Avatar predeterminado clásico de MSN Messenger.
    Usa la imagen aportada por el proyecto cuando un usuario no tiene foto. */
 .classic-avatar{
-  position:relative;
   display:block;
   width:35px;
   height:35px;
@@ -10,6 +9,6 @@
 }
 .classic-avatar i,.classic-avatar b,.classic-avatar em{display:none!important}
 .contact-mini-avatar .classic-avatar{width:20px;height:20px;transform:none}
-.me-pic .classic-avatar.large{width:35px;height:35px;transform:scale(1.2)}
-.contact-pic .classic-avatar.hero{width:35px;height:35px;transform:scale(2.25)}
-.me-small .classic-avatar{width:35px;height:35px;transform:scale(2.05)}
+.me-pic .classic-avatar.large{width:42px;height:42px;transform:none}
+.contact-pic .classic-avatar.hero{width:112px;height:112px;transform:none}
+.me-small .classic-avatar.self{width:112px;height:112px;transform:none}
