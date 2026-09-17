@@ -1,1 +1,1 @@
-(()=>{if(document.querySelector('script[data-msn-auth-bootstrap]'))return;const s=document.createElement('script');s.src='auth-bootstrap-2005.js?v=20260917-8';s.dataset.msnAuthBootstrap='1';document.body.appendChild(s)})();
+(()=>{if(document.querySelector('script[data-msn-auth-bootstrap]'))return;const s=document.createElement('script');s.src='auth-bootstrap-2005.js?v=20260917-9';s.dataset.msnAuthBootstrap='1';document.body.appendChild(s)})();
