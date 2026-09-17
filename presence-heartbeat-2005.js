@@ -1,6 +1,6 @@
 (()=>{
-const HEARTBEAT_MS=20000;
-const STALE_MS=60000;
+const HEARTBEAT_MS=30000;
+const STALE_MS=90000;
 let client=null,user=null,timer=null,busy=false;
 
 function effectiveStatus(profile,now=Date.now()){
