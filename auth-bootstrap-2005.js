@@ -47,6 +47,7 @@
         if(!window.supabase)await load('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js');
         await load('supabase-config.js?v=20260917-3');
         await load('auth-2005.js?v=20260917-3');
+        await load('profile-sync.js?v=20260917-1');
       }catch(e){const m=document.querySelector('#authLoginMessage');if(m){m.textContent='No fue posible cargar el servicio de inicio de sesión.';m.className='auth-status error'}}
     })();
   };
