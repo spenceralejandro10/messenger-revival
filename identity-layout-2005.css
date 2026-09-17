@@ -1,0 +1,15 @@
+/* MSN 2005 buddy header: roomier profile composition without changing the visual language */
+.buddy-window .identity{height:196px!important;padding:7px 10px 9px!important;overflow:visible!important}
+.buddy-window .brandline{height:34px!important;margin-bottom:7px!important;display:flex!important;align-items:center!important}
+.buddy-window .brandline .msn-main-logo{width:132px!important;height:30px!important;object-fit:contain!important;object-position:left center!important}
+.buddy-window .identity-row{display:grid!important;grid-template-columns:104px minmax(0,1fr)!important;column-gap:16px!important;align-items:start!important;min-height:106px!important}
+.buddy-window .me-pic{width:104px!important;height:104px!important;min-width:104px!important;min-height:104px!important;border-width:4px!important}
+.buddy-window .me-pic .self-avatar-holder,.buddy-window .me-pic .self-avatar-holder>img{width:100%!important;height:100%!important}
+.buddy-window .me-pic .self-avatar-holder>img{object-fit:cover!important}
+.buddy-window .identity-copy{padding-top:4px!important;min-width:0!important}
+.buddy-window .identity-copy>div{display:flex!important;align-items:center!important;gap:6px!important;min-height:25px!important;white-space:nowrap!important}
+.buddy-window .identity-copy #displayName{width:118px!important;margin:0!important;font-weight:bold!important}
+.buddy-window .identity-copy #statusSelect{max-width:92px!important;margin-left:2px!important}
+.buddy-window .identity-copy .personal-message{width:100%!important;margin-top:13px!important;padding:2px 0!important;line-height:18px!important}
+.buddy-window .quicklinks{margin-left:120px!important;padding-top:8px!important;gap:17px!important;align-items:center!important;white-space:nowrap!important}
+.buddy-window .contact-list{height:239px!important}
