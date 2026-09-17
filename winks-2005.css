@@ -1,0 +1,64 @@
+.msn-wink-overlay-2005{
+  position:absolute;z-index:130;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;overflow:hidden;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.42),rgba(255,255,255,0) 58%);
+}
+.msn-wink-stage-2005{
+  position:relative;width:min(420px,78%);height:min(300px,72%);display:flex;align-items:center;justify-content:center;
+  filter:drop-shadow(3px 5px 4px rgba(58,75,90,.32));animation:msnWinkStage2005 2.8s ease-in-out forwards;
+}
+.msn-wink-main-2005{font-size:clamp(72px,10vw,142px);line-height:1;transform-origin:center;animation:msnWinkMain2005 2.6s cubic-bezier(.2,.8,.2,1) forwards}
+.msn-wink-label-2005{
+  position:absolute;left:50%;bottom:5%;transform:translateX(-50%);padding:4px 10px;white-space:nowrap;
+  font:bold 12px Tahoma,Verdana,Arial,sans-serif;color:#174f83;background:linear-gradient(#fff,#dfeffc);
+  border:1px solid #7aa2c0;box-shadow:1px 2px 3px #7896;border-radius:2px;animation:msnWinkLabel2005 2.8s ease forwards;
+}
+.msn-wink-particle-2005{
+  position:absolute;left:50%;top:50%;font-size:clamp(22px,3vw,46px);opacity:0;
+  animation:msnWinkParticle2005 2.5s ease-out forwards;animation-delay:var(--delay);
+}
+.msn-wink-spark-2005{
+  position:absolute;width:8px;height:8px;border-radius:50%;background:#ffe66b;box-shadow:0 0 0 2px #fff8,0 0 12px #ffbd2d;
+  opacity:0;animation:msnWinkSpark2005 2.3s ease-out forwards;animation-delay:var(--delay);
+}
+.msn-wink-picker-2005{width:338px!important;padding:7px!important}
+.msn-wink-picker-2005 .msn-flyout-title{margin-bottom:5px}
+.msn-wink-grid-2005{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-height:238px;overflow:auto;padding:4px;background:#fff;border:1px solid #a7c1d2}
+.msn-wink-choice-2005{
+  height:62px!important;min-width:54px!important;padding:3px!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;gap:1px!important;background:#fff!important;border:1px solid transparent!important;
+  font:10px Tahoma,Verdana,Arial,sans-serif!important;color:#222!important;
+}
+.msn-wink-choice-2005:hover{background:#eaf5ff!important;border-color:#6b9ac1!important}
+.msn-wink-choice-2005 span{display:block;font-size:28px;line-height:30px}
+.msn-wink-choice-2005 small{display:block;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:9px Tahoma,Verdana,Arial,sans-serif}
+.msn-wink-history-2005{padding:.4em .7em;color:#365f80;font-style:italic}
+.msn-wink-history-2005 b{font-style:normal;color:#174f83}
+@keyframes msnWinkStage2005{
+  0%{transform:scale(.2) rotate(-10deg);opacity:0}14%{transform:scale(1.12) rotate(4deg);opacity:1}
+  35%{transform:scale(.96) rotate(-2deg)}72%{transform:scale(1.03)}88%{opacity:1}100%{transform:scale(1.35);opacity:0}
+}
+@keyframes msnWinkMain2005{
+  0%{transform:scale(.25) rotate(-14deg)}18%{transform:scale(1.25) rotate(8deg)}42%{transform:scale(.92) rotate(-4deg)}
+  65%{transform:scale(1.08)}100%{transform:scale(1.42) rotate(3deg)}
+}
+@keyframes msnWinkLabel2005{0%,15%{opacity:0;bottom:-3%}28%,82%{opacity:1;bottom:5%}100%{opacity:0;bottom:9%}}
+@keyframes msnWinkParticle2005{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(0deg)}
+  18%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1.25) rotate(var(--r))}
+}
+@keyframes msnWinkSpark2005{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+  22%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1.8)}
+}
+.msn-wink-overlay-2005[data-wink="kiss"] .msn-wink-main-2005{animation-name:msnWinkKiss2005}
+.msn-wink-overlay-2005[data-wink="laugh"] .msn-wink-main-2005{animation-name:msnWinkLaugh2005}
+.msn-wink-overlay-2005[data-wink="cool"] .msn-wink-main-2005{animation-name:msnWinkCool2005}
+.msn-wink-overlay-2005[data-wink="thunder"] .msn-wink-stage-2005{animation-name:msnWinkThunder2005}
+.msn-wink-overlay-2005[data-wink="dance"] .msn-wink-main-2005{animation-name:msnWinkDance2005}
+@keyframes msnWinkKiss2005{0%{transform:scale(.2)}20%{transform:scale(1.25) rotate(-8deg)}45%{transform:scale(.95) rotate(8deg)}70%{transform:scale(1.12)}100%{transform:scale(1.5)}}
+@keyframes msnWinkLaugh2005{0%{transform:scale(.2)}20%{transform:scale(1.2)}35%{transform:translateY(-12px) rotate(-6deg)}50%{transform:translateY(8px) rotate(6deg)}65%{transform:translateY(-8px) rotate(-5deg)}100%{transform:scale(1.4)}}
+@keyframes msnWinkCool2005{0%{transform:scale(.2) rotate(-20deg)}24%{transform:scale(1.2) rotate(5deg)}52%{transform:scale(1) rotate(-2deg)}100%{transform:scale(1.45) rotate(2deg)}}
+@keyframes msnWinkThunder2005{0%{opacity:0;filter:brightness(1)}18%{opacity:1;filter:brightness(1)}25%{filter:brightness(2.2)}31%{filter:brightness(.8)}38%{filter:brightness(2)}55%{filter:brightness(1)}100%{opacity:0;transform:scale(1.3)}}
+@keyframes msnWinkDance2005{0%{transform:scale(.2)}18%{transform:scale(1.15)}32%{transform:translateX(-24px) rotate(-14deg)}46%{transform:translateX(24px) rotate(14deg)}60%{transform:translateX(-18px) rotate(-10deg)}74%{transform:translateX(18px) rotate(10deg)}100%{transform:scale(1.35)}}
