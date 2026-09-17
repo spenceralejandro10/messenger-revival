@@ -87,7 +87,7 @@
 
   function start() {
     clearInterval(timer);
-    timer = setInterval(pollMessages, 1000);
+    timer = setInterval(() => { if (document.visibilityState === 'visible') pollMessages(); }, 60000);
     pollMessages();
   }
 
