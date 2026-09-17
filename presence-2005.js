@@ -16,18 +16,19 @@ const msnPresence={
 const statusIconPath=s=>`assets/status-icons/${(msnPresence[s]||msnPresence.offline).icon}`;
 const statusIcon=(s,extra='')=>`<img class="msn-status-icon ${extra}" src="${statusIconPath(s)}" alt="${(msnPresence[s]||msnPresence.offline).label}">`;
 
-// Ten demo contacts: one per uploaded artwork so every state can be inspected in the UI.
+// Contact names intentionally recreate the playful nickname culture of Messenger 2005:
+// hearts, music notes, alternating case, ASCII ornaments and short personal messages.
 contacts.splice(0,contacts.length,
- {id:'alex',name:'Alex',status:'online',mood:'Disponible'},
- {id:'luna',name:'Luna',status:'away',mood:'Ausente'},
- {id:'mia',name:'Mia',status:'busy',mood:'Ocupado'},
- {id:'owen',name:'Owen',status:'brb',mood:'Vuelvo enseguida...'},
- {id:'sofia',name:'Sofía',status:'phone',mood:'Al teléfono'},
- {id:'david',name:'David',status:'lunch',mood:'Salí a comer'},
- {id:'natalia',name:'Natalia',status:'offlineGreen',mood:'Desconectado'},
- {id:'mateo',name:'Mateo',status:'blockedGreen',mood:'Bloqueado'},
- {id:'camila',name:'Camila',status:'offline',mood:'Desconectado'},
- {id:'atlas',name:'AtlasBot',status:'blocked',mood:'Bloqueado'}
+ {id:'alex',name:'ღ•° Aℓєx °•ღ',status:'online',mood:'♫ eN la cArA de luna :)'},
+ {id:'luna',name:'♥ PєєW♥Lυηα ♥•••♫',status:'away',mood:'♫ Chiquilla♫•••♥'},
+ {id:'mia',name:'♡ ¡ MiiA QuEeN ! ♡',status:'busy',mood:'ღ drama queen! ღ'},
+ {id:'owen',name:'☠ Y A H 5 R • Owen ♫',status:'brb',mood:'• PeRdOnA si TE AMO ♧'},
+ {id:'sofia',name:'‹ F A N N Y Lú ! › ღ',status:'phone',mood:'☆ no te pido que traigas flores ☆'},
+ {id:'david',name:'xX KυDαi Xx ♫',status:'lunch',mood:'☆ sin despertar ni huir ☆'},
+ {id:'natalia',name:'♪ Nikkι Clαn ♪',status:'offlineGreen',mood:'♫ no me digas que no ♫'},
+ {id:'mateo',name:'•°¤ Mαтєσ ¤°•',status:'blockedGreen',mood:'x_x perdido en el 2005'},
+ {id:'camila',name:'♥•.¸¸.• Cαмιℓα •.¸¸.•♥',status:'offline',mood:'♪ viviendo mi canción ♪'},
+ {id:'atlas',name:'★彡 AтℓαsBσт 彡★',status:'blocked',mood:'¿Alguien dijo zumbido? :P'}
 );
 Object.assign(labels,{brb:'Vuelvo enseguida',phone:'Al teléfono',lunch:'Salí a comer',offline:'Desconectado',invisible:'Aparecer desconectado'});
 
