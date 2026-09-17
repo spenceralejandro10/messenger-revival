@@ -1,23 +1,20 @@
-// MSN Messenger 7.x presence reconstruction using the uploaded status artwork.
-// Historical selectable statuses: Online, Busy, Be Right Back, Away, On The Phone, Out To Lunch, Appear Offline.
+// MSN Messenger 7.x presence reconstruction using the uploaded artwork.
+// Historical selectable states retained: Online, Busy, Be Right Back, Away, On The Phone, Out To Lunch, Appear Offline.
+// Only 01/02/03 are presence artwork. 04-08 are UI action artwork and are intentionally not treated as presence states.
 const msnPresence={
  online:{label:'Disponible',icon:'01-disponible-online.png',connected:true},
- away:{label:'Ausente',icon:'02-ausente-away.png',connected:true},
- busy:{label:'Ocupado',icon:'03-ocupado-busy.png',connected:true},
- brb:{label:'Vuelvo enseguida',icon:'04-vuelvo-enseguida-be-right-back.png',connected:true},
- phone:{label:'Al teléfono',icon:'05-al-telefono-on-the-phone.png',connected:true},
- lunch:{label:'Salí a comer',icon:'06-sali-a-comer-out-to-lunch.png',connected:true},
- offlineGreen:{label:'Desconectado',icon:'07-desconectado-offline-verde.png',connected:false},
- blockedGreen:{label:'Bloqueado',icon:'08-bloqueado-blocked-verde.png',connected:false},
- offline:{label:'Desconectado',icon:'09-desconectado-offline-gris.png',connected:false},
- blocked:{label:'Bloqueado',icon:'10-bloqueado-blocked-rojo.png',connected:false},
- invisible:{label:'Aparecer desconectado',icon:'09-desconectado-offline-gris.png',connected:false}
+ busy:{label:'Ocupado',icon:'02-ocupado-busy.png',connected:true},
+ away:{label:'Ausente',icon:'03-ausente-away-reloj.png',connected:true},
+ brb:{label:'Vuelvo enseguida',icon:'03-ausente-away-reloj.png',connected:true},
+ phone:{label:'Al teléfono',icon:'02-ocupado-busy.png',connected:true},
+ lunch:{label:'Salí a comer',icon:'03-ausente-away-reloj.png',connected:true},
+ invisible:{label:'Aparecer desconectado',icon:'03-ausente-away-reloj.png',connected:false},
+ offline:{label:'Desconectado',icon:'03-ausente-away-reloj.png',connected:false},
+ blocked:{label:'Bloqueado',icon:'02-ocupado-busy.png',connected:false}
 };
 const statusIconPath=s=>`assets/status-icons/${(msnPresence[s]||msnPresence.offline).icon}`;
 const statusIcon=(s,extra='')=>`<img class="msn-status-icon ${extra}" src="${statusIconPath(s)}" alt="${(msnPresence[s]||msnPresence.offline).label}">`;
 
-// Contact names intentionally recreate the playful nickname culture of Messenger 2005:
-// hearts, music notes, alternating case, ASCII ornaments and short personal messages.
 contacts.splice(0,contacts.length,
  {id:'alex',name:'ღ•° Aℓєx °•ღ',status:'online',mood:'♫ eN la cArA de luna :)'},
  {id:'luna',name:'♥ PєєW♥Lυηα ♥•••♫',status:'away',mood:'♫ Chiquilla♫•••♥'},
@@ -25,10 +22,10 @@ contacts.splice(0,contacts.length,
  {id:'owen',name:'☠ Y A H 5 R • Owen ♫',status:'brb',mood:'• PeRdOnA si TE AMO ♧'},
  {id:'sofia',name:'‹ F A N N Y Lú ! › ღ',status:'phone',mood:'☆ no te pido que traigas flores ☆'},
  {id:'david',name:'xX KυDαi Xx ♫',status:'lunch',mood:'☆ sin despertar ni huir ☆'},
- {id:'natalia',name:'♪ Nikkι Clαn ♪',status:'offlineGreen',mood:'♫ no me digas que no ♫'},
- {id:'mateo',name:'•°¤ Mαтєσ ¤°•',status:'blockedGreen',mood:'x_x perdido en el 2005'},
- {id:'camila',name:'♥•.¸¸.• Cαмιℓα •.¸¸.•♥',status:'offline',mood:'♪ viviendo mi canción ♪'},
- {id:'atlas',name:'★彡 AтℓαsBσт 彡★',status:'blocked',mood:'¿Alguien dijo zumbido? :P'}
+ {id:'natalia',name:'♪ Nikkι Clαn ♪',status:'offline',mood:'♫ no me digas que no ♫'},
+ {id:'mateo',name:'•°¤ Mαтєσ ¤°•',status:'away',mood:'x_x perdido en el 2005'},
+ {id:'camila',name:'♥•.¸¸.• Cαмιℓα •.¸¸.•♥',status:'online',mood:'♪ viviendo mi canción ♪'},
+ {id:'atlas',name:'★彡 AтℓαsBσт 彡★',status:'busy',mood:'¿Alguien dijo zumbido? :P'}
 );
 Object.assign(labels,{brb:'Vuelvo enseguida',phone:'Al teléfono',lunch:'Salí a comer',offline:'Desconectado',invisible:'Aparecer desconectado'});
 
