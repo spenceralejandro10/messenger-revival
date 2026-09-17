@@ -39,12 +39,14 @@
       </section>`;
       document.body.prepend(shell);
     }
+    const tools=document.querySelector('.contact-tools');
+    if(tools&&!document.querySelector('#signOutBtn')){const b=document.createElement('button');b.id='signOutBtn';b.type='button';b.title='Cerrar sesión';b.textContent='Cerrar sesión';tools.appendChild(b)}
     const load=(src)=>new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.body.appendChild(s)});
     (async()=>{
       try{
         if(!window.supabase)await load('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js');
-        await load('supabase-config.js?v=20260917-2');
-        await load('auth-2005.js?v=20260917-2');
+        await load('supabase-config.js?v=20260917-3');
+        await load('auth-2005.js?v=20260917-3');
       }catch(e){const m=document.querySelector('#authLoginMessage');if(m){m.textContent='No fue posible cargar el servicio de inicio de sesión.';m.className='auth-status error'}}
     })();
   };
