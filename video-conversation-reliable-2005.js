@@ -23,6 +23,7 @@
   let savedTopHTML = '';
   let savedBottomHTML = '';
   const processed = new Set();
+  const INVITE_MAX_AGE_MS = 45000;
 
   const banner = document.createElement('div');
   banner.className = 'video-invite-banner';
@@ -44,6 +45,15 @@
 
   function activePeer() {
     return window.MessengerChat?.getActivePeer?.() || null;
+  }
+
+  async function isMutualContact(peerId) {
+    if (!client || !user || !peerId) return false;
+    const local = window.MessengerContacts?.contacts;
+    if (Array.isArray(local) && local.length) return local.some(p => p.id === peerId);
+    const { data, error } = await client.rpc('get_mutual_contact_ids');
+    if (error) return false;
+    return (data || []).some(row => row.contact_id === peerId);
   }
 
   function isPresenceOnline(p) {
@@ -348,6 +358,15 @@
   }
 
   async function showIncoming(signal) {
+    const createdAt = signal?.created_at ? new Date(signal.created_at).getTime() : 0;
+    if (!createdAt || Date.now() - createdAt > INVITE_MAX_AGE_MS) {
+      await client?.from('video_call_signals').delete().eq('id', signal.id).catch?.(() => {});
+      return;
+    }
+    if (!(await isMutualContact(signal.sender_id))) {
+      await client?.from('video_call_signals').delete().eq('id', signal.id).catch?.(() => {});
+      return;
+    }
     if (call) {
       if (call.id === signal.call_id) return;
       const previous = call;
@@ -390,6 +409,11 @@
     if (signal.expires_at && new Date(signal.expires_at) <= new Date()) return;
 
     if (signal.signal_type === 'invite') {
+      const createdAt = signal.created_at ? new Date(signal.created_at).getTime() : 0;
+      if (!createdAt || Date.now() - createdAt > INVITE_MAX_AGE_MS) {
+        await client.from('video_call_signals').delete().eq('id', signal.id).catch(() => {});
+        return;
+      }
       await showIncoming(signal);
       return;
     }
