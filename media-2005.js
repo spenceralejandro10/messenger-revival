@@ -5,10 +5,10 @@ const asset='assets/emojis-msn-2005/';
 function toast(t){const el=$('#toast');if(!el)return;el.textContent=t;el.classList.add('show');clearTimeout(window.__mediaToast);window.__mediaToast=setTimeout(()=>el.classList.remove('show'),2200)}
 async function addVoiceClip(blob){if(window.MessengerChat?.sendVoice)return window.MessengerChat.sendVoice(blob);toast('El chat persistente todavía no está disponible.')}
 window.MSN75Voice={
- recording:false,starting:false,stopping:false,recorder:null,stream:null,timer:null,session:0,sentSessions:new Set(),
+ recording:false,starting:false,stopping:false,stopRequested:false,recorder:null,stream:null,timer:null,session:0,sentSessions:new Set(),
  async start(button){
    if(this.recording||this.starting||this.stopping)return;
-   const session=++this.session;this.starting=true;
+   const session=++this.session;this.starting=true;this.stopRequested=false;
    try{
      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
      if(session!==this.session){stream.getTracks().forEach(t=>t.stop());return}
@@ -28,6 +28,7 @@ window.MSN75Voice={
      };
      recorder.start();this.starting=false;this.recording=true;
      button?.classList.add('recording');const label=button?.querySelector('b');if(label)label.textContent='Grabando…';
+     if(this.stopRequested){this.stopRequested=false;this.stop();return}
      this.timer=setTimeout(()=>this.stop(),15000);
    }catch(e){
      this.starting=false;this.stopping=false;this.recording=false;
@@ -36,7 +37,7 @@ window.MSN75Voice={
    }
  },
  stop(){
-   if(this.starting){return}
+   if(this.starting){this.stopRequested=true;return}
    if(!this.recording||this.stopping)return;
    this.stopping=true;this.recording=false;clearTimeout(this.timer);this.timer=null;
    const recorder=this.recorder;
