@@ -15,6 +15,7 @@
   let callTimer = null;
   let disconnectTimer = null;
   let polling = false;
+  let lastSignalPollAt = 0;
   let realtimeReady = false;
   let lastSignalId = 0;
   let call = null;
@@ -521,7 +522,9 @@
   }
 
   async function pollSignals() {
-    if (!client || !user || polling) return;
+    const now = Date.now();
+    if (!client || !user || polling || now - lastSignalPollAt < 10000) return;
+    lastSignalPollAt = now;
     polling = true;
     try {
       let query = client.from('video_call_signals')
@@ -546,20 +549,22 @@
     pollTimer = setInterval(() => {
       if (!realtimeReady && document.visibilityState === 'visible') pollSignals();
     }, 15000);
-    pollSignals();
   }
 
   function subscribe() {
     if (!client || !user) return;
-    if (channel) client.removeChannel?.(channel);
-    channel = client.channel(`video-calls-${user.id}-${crypto.randomUUID()}`)
+    const previous = channel;
+    if (previous) client.removeChannel?.(previous);
+    const next = client.channel(`video-calls-${user.id}-${crypto.randomUUID()}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'video_call_signals',
         filter: `recipient_id=eq.${user.id}`,
-      }, payload => handleSignal(payload.new).catch(error => console.warn('Video signal failed', error)))
-      .subscribe(status => {
+      }, payload => handleSignal(payload.new).catch(error => console.warn('Video signal failed', error)));
+    channel = next;
+    next.subscribe(status => {
+        if (channel !== next) return;
         if (status === 'SUBSCRIBED') {
           realtimeReady = true;
           pollSignals();
@@ -579,6 +584,7 @@
     channel = null;
     processed.clear();
     lastSignalId = 0;
+    lastSignalPollAt = 0;
     if (call || rail.classList.contains('video-call')) restoreRail();
     call = null;
     user = null;
@@ -611,7 +617,7 @@
     cleanupSession();
   });
   window.addEventListener('online', () => {
-    if (!user) return;
+    if (!user || realtimeReady) return;
     ensureRealtimeAuth().then(() => subscribe()).catch(() => {});
     pollSignals();
   });

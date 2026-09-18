@@ -2,7 +2,9 @@
   let client = null;
   let user = null;
   let timer = null;
+  let graceTimer = null;
   let polling = false;
+  let lastPollAt = 0;
   let cursor = null;
   const seen = new Set();
 
@@ -73,7 +75,9 @@
   }
 
   async function pollMessages() {
-    if (!client || !user || polling) return;
+    const now = Date.now();
+    if (!client || !user || polling || now - lastPollAt < 30000) return;
+    lastPollAt = now;
     polling = true;
     try {
       let q = client.from('messages')
@@ -95,8 +99,11 @@
 
   function start() {
     clearInterval(timer);
+    clearTimeout(graceTimer);
     timer = setInterval(() => { if (!window.MessengerRealtimeHealth?.messages && document.visibilityState === 'visible') pollMessages(); }, 60000);
-    pollMessages();
+    graceTimer = setTimeout(() => {
+      if (!window.MessengerRealtimeHealth?.messages && document.visibilityState === 'visible') pollMessages();
+    }, 12000);
   }
 
   async function init(event) {
@@ -111,11 +118,14 @@
 
   function cleanup() {
     clearInterval(timer);
+    clearTimeout(graceTimer);
     timer = null;
+    graceTimer = null;
     polling = false;
     client = null;
     user = null;
     cursor = null;
+    lastPollAt = 0;
     seen.clear();
   }
 
@@ -123,7 +133,9 @@
   window.addEventListener('messenger-revival:auth-signed-out', cleanup);
   window.addEventListener('online', () => {
     if (!user) return;
-    setRealtimeAuth().then(() => pollMessages()).catch(() => {});
+    setRealtimeAuth().then(() => {
+      if (!window.MessengerRealtimeHealth?.messages) pollMessages();
+    }).catch(() => {});
   });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && user && !window.MessengerRealtimeHealth?.messages) pollMessages();
