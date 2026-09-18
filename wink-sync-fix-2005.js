@@ -6,6 +6,7 @@ function toast(text){const el=$('#toast');if(!el)return;el.textContent=text;el.c
 function activePeer(){return window.MessengerChat?.getActivePeer?.()||null}
 function closePicker(){document.querySelectorAll('.msn-wink-sync-picker').forEach(x=>x.remove())}
 function playRow(row){
+  if(window.MessengerConversationRoom?.active)return false;
   if(!row?.id||row.kind!=='wink'||!user||row.recipient_id!==user.id||row.sender_id===user.id)return false;
   const key=String(row.id);if(handled.has(key))return false;
   const peer=activePeer();if(!peer||String(peer.id)!==String(row.sender_id))return false;
@@ -18,6 +19,7 @@ function playRow(row){
   return !!played;
 }
 async function catchRecent(){
+  if(window.MessengerConversationRoom?.active)return;
   const peer=activePeer();if(!client||!user||!peer||peer.is_self)return;
   const since=new Date(Date.now()-15000).toISOString();
   const {data,error}=await client.from('messages').select('id,sender_id,recipient_id,kind,body,created_at').eq('recipient_id',user.id).eq('sender_id',peer.id).eq('kind','wink').gte('created_at',since).order('created_at',{ascending:false}).limit(1);
@@ -39,7 +41,7 @@ function cleanup(){closePicker();if(channel&&client)client.removeChannel?.(chann
 function showPicker(anchor){
   const api=window.MessengerWinks;if(!api?.catalog?.length)return toast('Los guiños todavía se están cargando.');
   closePicker();const menu=document.createElement('div');menu.className='msn-content-menu msn-wink-sync-picker';
-  for(const w of api.catalog){const b=document.createElement('button');b.type='button';b.innerHTML='<span>'+w.icon+'</span><span>'+w.name+'</span>';b.onclick=async ev=>{ev.preventDefault();ev.stopPropagation();closePicker();const peer=activePeer();if(!peer)return toast('Abre una conversación primero.');const sent=await window.MessengerChat?.sendSpecial?.('wink',w.id);if(!sent)return toast('No se pudo enviar el guiño.');api.play?.(w.id,{messageId:String(sent.id||'local-'+Date.now())});toast('Guiño enviado: '+w.name)};menu.appendChild(b)}
+  for(const w of api.catalog){const b=document.createElement('button');b.type='button';b.innerHTML='<span>'+w.icon+'</span><span>'+w.name+'</span>';b.onclick=async ev=>{ev.preventDefault();ev.stopPropagation();closePicker();let sent=null;if(window.MessengerConversationRoom?.active)sent=await window.MessengerConversationRoom.sendSpecial?.('wink',w.id);else{const peer=activePeer();if(!peer)return toast('Abre una conversación primero.');sent=await window.MessengerChat?.sendSpecial?.('wink',w.id)}if(!sent)return toast('No se pudo enviar el guiño.');api.play?.(w.id,{messageId:String((window.MessengerConversationRoom?.active?'room-local:':'local:')+(sent.id||Date.now()))});toast('Guiño enviado: '+w.name)};menu.appendChild(b)}
   document.body.appendChild(menu);const r=anchor.getBoundingClientRect();menu.style.left=Math.max(6,Math.min(window.innerWidth-menu.offsetWidth-6,r.left))+'px';menu.style.top=Math.max(6,r.top-menu.offsetHeight-4)+'px';
 }
 document.addEventListener('click',ev=>{
