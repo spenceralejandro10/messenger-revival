@@ -56,6 +56,11 @@
     return (data || []).some(row => row.contact_id === peerId);
   }
 
+  async function discardSignal(id) {
+    if (!client || !id) return;
+    try { await client.from('video_call_signals').delete().eq('id', id); } catch {}
+  }
+
   function isPresenceOnline(p) {
     if (!p) return false;
     if (window.MessengerPresence?.isOnline) return window.MessengerPresence.isOnline(p);
@@ -360,7 +365,7 @@
   async function showIncoming(signal) {
     const createdAt = signal?.created_at ? new Date(signal.created_at).getTime() : 0;
     if (!createdAt || Date.now() - createdAt > INVITE_MAX_AGE_MS) {
-      await client?.from('video_call_signals').delete().eq('id', signal.id).catch?.(() => {});
+      await discardSignal(signal.id);
       return;
     }
     if (!(await isMutualContact(signal.sender_id))) {
@@ -411,7 +416,7 @@
     if (signal.signal_type === 'invite') {
       const createdAt = signal.created_at ? new Date(signal.created_at).getTime() : 0;
       if (!createdAt || Date.now() - createdAt > INVITE_MAX_AGE_MS) {
-        await client.from('video_call_signals').delete().eq('id', signal.id).catch(() => {});
+        await discardSignal(signal.id);
         return;
       }
       await showIncoming(signal);
