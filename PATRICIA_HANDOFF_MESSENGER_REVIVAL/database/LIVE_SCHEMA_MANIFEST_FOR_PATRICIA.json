@@ -1,0 +1,1552 @@
+{
+  "tables": [
+    {
+      "columns": [
+        {
+          "name": "owner_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "blocked_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "created_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "blocks_pkey",
+          "definition": "CREATE UNIQUE INDEX blocks_pkey ON public.blocks USING btree (owner_id, blocked_id)"
+        }
+      ],
+      "table_name": "blocks",
+      "constraints": [
+        {
+          "name": "blocks_blocked_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (blocked_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "blocks_check",
+          "type": "c",
+          "definition": "CHECK (owner_id <> blocked_id)"
+        },
+        {
+          "name": "blocks_owner_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "blocks_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (owner_id, blocked_id)"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "owner_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "contact_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "created_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "contacts_pkey",
+          "definition": "CREATE UNIQUE INDEX contacts_pkey ON public.contacts USING btree (owner_id, contact_id)"
+        }
+      ],
+      "table_name": "contacts",
+      "constraints": [
+        {
+          "name": "contacts_check",
+          "type": "c",
+          "definition": "CHECK (owner_id <> contact_id)"
+        },
+        {
+          "name": "contacts_contact_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (contact_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "contacts_owner_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "contacts_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (owner_id, contact_id)"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "owner_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "peer_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "cleared_at",
+          "default": null,
+          "nullable": "YES",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "name": "muted",
+          "default": "false",
+          "nullable": "NO",
+          "udt_name": "bool",
+          "data_type": "boolean"
+        },
+        {
+          "name": "updated_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "conversation_state_pkey",
+          "definition": "CREATE UNIQUE INDEX conversation_state_pkey ON public.conversation_state USING btree (owner_id, peer_id)"
+        }
+      ],
+      "table_name": "conversation_state",
+      "constraints": [
+        {
+          "name": "conversation_state_owner_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (owner_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "conversation_state_peer_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (peer_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "conversation_state_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (owner_id, peer_id)"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "id",
+          "default": "gen_random_uuid()",
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "sender_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "receiver_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "status",
+          "default": "'pending'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "created_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "name": "responded_at",
+          "default": null,
+          "nullable": "YES",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "friend_requests_pending_pair_uq",
+          "definition": "CREATE UNIQUE INDEX friend_requests_pending_pair_uq ON public.friend_requests USING btree (LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id)) WHERE (status = 'pending'::text)"
+        },
+        {
+          "name": "friend_requests_pkey",
+          "definition": "CREATE UNIQUE INDEX friend_requests_pkey ON public.friend_requests USING btree (id)"
+        },
+        {
+          "name": "friend_requests_receiver_idx",
+          "definition": "CREATE INDEX friend_requests_receiver_idx ON public.friend_requests USING btree (receiver_id, status, created_at DESC)"
+        },
+        {
+          "name": "friend_requests_sender_idx",
+          "definition": "CREATE INDEX friend_requests_sender_idx ON public.friend_requests USING btree (sender_id, status, created_at DESC)"
+        }
+      ],
+      "table_name": "friend_requests",
+      "constraints": [
+        {
+          "name": "friend_requests_check",
+          "type": "c",
+          "definition": "CHECK (sender_id <> receiver_id)"
+        },
+        {
+          "name": "friend_requests_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "friend_requests_receiver_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (receiver_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "friend_requests_sender_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (sender_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "friend_requests_status_check",
+          "type": "c",
+          "definition": "CHECK (status = ANY (ARRAY['pending'::text, 'accepted'::text, 'declined'::text, 'cancelled'::text]))"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "conversation_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "user_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "invited_by",
+          "default": null,
+          "nullable": "YES",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "joined_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "group_conversation_members_pkey",
+          "definition": "CREATE UNIQUE INDEX group_conversation_members_pkey ON public.group_conversation_members USING btree (conversation_id, user_id)"
+        },
+        {
+          "name": "group_members_user_idx",
+          "definition": "CREATE INDEX group_members_user_idx ON public.group_conversation_members USING btree (user_id, joined_at DESC)"
+        }
+      ],
+      "table_name": "group_conversation_members",
+      "constraints": [
+        {
+          "name": "group_conversation_members_conversation_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (conversation_id) REFERENCES group_conversations(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "group_conversation_members_invited_by_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (invited_by) REFERENCES profiles(id) ON DELETE SET NULL"
+        },
+        {
+          "name": "group_conversation_members_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (conversation_id, user_id)"
+        },
+        {
+          "name": "group_conversation_members_user_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "id",
+          "default": "gen_random_uuid()",
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "created_by",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "title",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "created_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "name": "member_signature",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "group_conversations_member_signature_unique",
+          "definition": "CREATE UNIQUE INDEX group_conversations_member_signature_unique ON public.group_conversations USING btree (member_signature) WHERE (member_signature <> ''::text)"
+        },
+        {
+          "name": "group_conversations_pkey",
+          "definition": "CREATE UNIQUE INDEX group_conversations_pkey ON public.group_conversations USING btree (id)"
+        }
+      ],
+      "table_name": "group_conversations",
+      "constraints": [
+        {
+          "name": "group_conversations_created_by_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "group_conversations_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "id",
+          "default": "gen_random_uuid()",
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "conversation_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "sender_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "kind",
+          "default": "'text'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "body",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "format",
+          "default": "'{}'::jsonb",
+          "nullable": "NO",
+          "udt_name": "jsonb",
+          "data_type": "jsonb"
+        },
+        {
+          "name": "created_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "group_messages_conversation_created_idx",
+          "definition": "CREATE INDEX group_messages_conversation_created_idx ON public.group_messages USING btree (conversation_id, created_at)"
+        },
+        {
+          "name": "group_messages_pkey",
+          "definition": "CREATE UNIQUE INDEX group_messages_pkey ON public.group_messages USING btree (id)"
+        }
+      ],
+      "table_name": "group_messages",
+      "constraints": [
+        {
+          "name": "group_messages_conversation_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (conversation_id) REFERENCES group_conversations(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "group_messages_kind_check",
+          "type": "c",
+          "definition": "CHECK (kind = ANY (ARRAY['text'::text, 'emoji'::text, 'nudge'::text, 'wink'::text]))"
+        },
+        {
+          "name": "group_messages_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "group_messages_sender_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (sender_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "id",
+          "default": "gen_random_uuid()",
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "sender_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "recipient_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "kind",
+          "default": "'text'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "body",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "attachment_url",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "attachment_name",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "attachment_mime",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "attachment_size",
+          "default": "0",
+          "nullable": "NO",
+          "udt_name": "int8",
+          "data_type": "bigint"
+        },
+        {
+          "name": "format",
+          "default": "'{}'::jsonb",
+          "nullable": "NO",
+          "udt_name": "jsonb",
+          "data_type": "jsonb"
+        },
+        {
+          "name": "created_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "name": "read_at",
+          "default": null,
+          "nullable": "YES",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "messages_pkey",
+          "definition": "CREATE UNIQUE INDEX messages_pkey ON public.messages USING btree (id)"
+        },
+        {
+          "name": "messages_recipient_sender_idx",
+          "definition": "CREATE INDEX messages_recipient_sender_idx ON public.messages USING btree (recipient_id, sender_id, created_at)"
+        },
+        {
+          "name": "messages_sender_recipient_idx",
+          "definition": "CREATE INDEX messages_sender_recipient_idx ON public.messages USING btree (sender_id, recipient_id, created_at)"
+        },
+        {
+          "name": "messages_unread_idx",
+          "definition": "CREATE INDEX messages_unread_idx ON public.messages USING btree (recipient_id, read_at) WHERE (read_at IS NULL)"
+        }
+      ],
+      "table_name": "messages",
+      "constraints": [
+        {
+          "name": "messages_attachment_size_check",
+          "type": "c",
+          "definition": "CHECK (attachment_size >= 0)"
+        },
+        {
+          "name": "messages_kind_check",
+          "type": "c",
+          "definition": "CHECK (kind = ANY (ARRAY['text'::text, 'image'::text, 'audio'::text, 'file'::text, 'emoji'::text, 'nudge'::text, 'wink'::text]))"
+        },
+        {
+          "name": "messages_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "messages_recipient_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (recipient_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "messages_sender_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (sender_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "user_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "age",
+          "default": null,
+          "nullable": "YES",
+          "udt_name": "int2",
+          "data_type": "smallint"
+        },
+        {
+          "name": "gender",
+          "default": "'prefer_not_say'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "orientation",
+          "default": "'prefer_not_say'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "nationality",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "interests",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "looking_for",
+          "default": "'not_looking'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "updated_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "profile_details_pkey",
+          "definition": "CREATE UNIQUE INDEX profile_details_pkey ON public.profile_details USING btree (user_id)"
+        }
+      ],
+      "table_name": "profile_details",
+      "constraints": [
+        {
+          "name": "profile_details_age_check",
+          "type": "c",
+          "definition": "CHECK (age IS NULL OR age >= 13 AND age <= 120)"
+        },
+        {
+          "name": "profile_details_gender_check",
+          "type": "c",
+          "definition": "CHECK (gender = ANY (ARRAY['woman'::text, 'man'::text, 'nonbinary'::text, 'other'::text, 'prefer_not_say'::text]))"
+        },
+        {
+          "name": "profile_details_interests_length",
+          "type": "c",
+          "definition": "CHECK (char_length(interests) <= 300)"
+        },
+        {
+          "name": "profile_details_looking_for_check",
+          "type": "c",
+          "definition": "CHECK (looking_for = ANY (ARRAY['friends'::text, 'relationship'::text, 'casual'::text, 'chat'::text, 'not_looking'::text, 'mystery'::text]))"
+        },
+        {
+          "name": "profile_details_nationality_length",
+          "type": "c",
+          "definition": "CHECK (char_length(nationality) <= 80)"
+        },
+        {
+          "name": "profile_details_orientation_check",
+          "type": "c",
+          "definition": "CHECK (orientation = ANY (ARRAY['heterosexual'::text, 'gay'::text, 'lesbian'::text, 'bisexual'::text, 'pansexual'::text, 'asexual'::text, 'other'::text, 'prefer_not_say'::text]))"
+        },
+        {
+          "name": "profile_details_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (user_id)"
+        },
+        {
+          "name": "profile_details_user_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "email",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "display_name",
+          "default": "'Messenger User'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "personal_message",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "display_picture",
+          "default": "''::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "status",
+          "default": "'online'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "created_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "name": "updated_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "name": "display_name_font",
+          "default": "'Tahoma'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "display_name_style",
+          "default": "'normal'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "display_name_size",
+          "default": "11",
+          "nullable": "NO",
+          "udt_name": "int4",
+          "data_type": "integer"
+        },
+        {
+          "name": "display_name_color",
+          "default": "'#111111'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "last_seen_at",
+          "default": null,
+          "nullable": "YES",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "name": "chat_font_family",
+          "default": "'Tahoma'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "chat_font_size",
+          "default": "11",
+          "nullable": "NO",
+          "udt_name": "int4",
+          "data_type": "integer"
+        },
+        {
+          "name": "chat_font_color",
+          "default": "'#000000'::text",
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "chat_font_bold",
+          "default": "false",
+          "nullable": "NO",
+          "udt_name": "bool",
+          "data_type": "boolean"
+        },
+        {
+          "name": "chat_font_italic",
+          "default": "false",
+          "nullable": "NO",
+          "udt_name": "bool",
+          "data_type": "boolean"
+        },
+        {
+          "name": "chat_font_underline",
+          "default": "false",
+          "nullable": "NO",
+          "udt_name": "bool",
+          "data_type": "boolean"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "profiles_display_name_lower_idx",
+          "definition": "CREATE INDEX profiles_display_name_lower_idx ON public.profiles USING btree (lower(display_name))"
+        },
+        {
+          "name": "profiles_email_lower_idx",
+          "definition": "CREATE INDEX profiles_email_lower_idx ON public.profiles USING btree (lower(email))"
+        },
+        {
+          "name": "profiles_pkey",
+          "definition": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+        }
+      ],
+      "table_name": "profiles",
+      "constraints": [
+        {
+          "name": "profiles_chat_font_color_check",
+          "type": "c",
+          "definition": "CHECK (chat_font_color ~ '^#[0-9A-Fa-f]{6}$'::text)"
+        },
+        {
+          "name": "profiles_chat_font_family_check",
+          "type": "c",
+          "definition": "CHECK (char_length(chat_font_family) >= 1 AND char_length(chat_font_family) <= 80)"
+        },
+        {
+          "name": "profiles_chat_font_size_check",
+          "type": "c",
+          "definition": "CHECK (chat_font_size >= 8 AND chat_font_size <= 48)"
+        },
+        {
+          "name": "profiles_display_name_color_check",
+          "type": "c",
+          "definition": "CHECK (display_name_color ~ '^#[0-9A-Fa-f]{6}$'::text)"
+        },
+        {
+          "name": "profiles_display_name_size_check",
+          "type": "c",
+          "definition": "CHECK (display_name_size >= 9 AND display_name_size <= 18)"
+        },
+        {
+          "name": "profiles_display_name_style_check",
+          "type": "c",
+          "definition": "CHECK (display_name_style = ANY (ARRAY['normal'::text, 'bold'::text, 'italic'::text, 'bold-italic'::text]))"
+        },
+        {
+          "name": "profiles_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "profiles_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "profiles_status_check",
+          "type": "c",
+          "definition": "CHECK (status = ANY (ARRAY['online'::text, 'busy'::text, 'away'::text, 'brb'::text, 'phone'::text, 'lunch'::text, 'invisible'::text, 'offline'::text]))"
+        }
+      ],
+      "rls_enabled": true
+    },
+    {
+      "columns": [
+        {
+          "name": "id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "int8",
+          "data_type": "bigint"
+        },
+        {
+          "name": "call_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "sender_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "recipient_id",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "uuid",
+          "data_type": "uuid"
+        },
+        {
+          "name": "signal_type",
+          "default": null,
+          "nullable": "NO",
+          "udt_name": "text",
+          "data_type": "text"
+        },
+        {
+          "name": "payload",
+          "default": "'{}'::jsonb",
+          "nullable": "NO",
+          "udt_name": "jsonb",
+          "data_type": "jsonb"
+        },
+        {
+          "name": "created_at",
+          "default": "now()",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        },
+        {
+          "name": "expires_at",
+          "default": "(now() + '00:10:00'::interval)",
+          "nullable": "NO",
+          "udt_name": "timestamptz",
+          "data_type": "timestamp with time zone"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "video_call_signals_call_idx",
+          "definition": "CREATE INDEX video_call_signals_call_idx ON public.video_call_signals USING btree (call_id, created_at)"
+        },
+        {
+          "name": "video_call_signals_pkey",
+          "definition": "CREATE UNIQUE INDEX video_call_signals_pkey ON public.video_call_signals USING btree (id)"
+        },
+        {
+          "name": "video_call_signals_recipient_created_idx",
+          "definition": "CREATE INDEX video_call_signals_recipient_created_idx ON public.video_call_signals USING btree (recipient_id, created_at DESC)"
+        },
+        {
+          "name": "video_call_signals_sender_idx",
+          "definition": "CREATE INDEX video_call_signals_sender_idx ON public.video_call_signals USING btree (sender_id)"
+        }
+      ],
+      "table_name": "video_call_signals",
+      "constraints": [
+        {
+          "name": "video_call_signals_check",
+          "type": "c",
+          "definition": "CHECK (sender_id <> recipient_id)"
+        },
+        {
+          "name": "video_call_signals_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "video_call_signals_recipient_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (recipient_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "video_call_signals_sender_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (sender_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "video_call_signals_signal_type_check",
+          "type": "c",
+          "definition": "CHECK (signal_type = ANY (ARRAY['invite'::text, 'accept'::text, 'reject'::text, 'busy'::text, 'cancel'::text, 'offer'::text, 'answer'::text, 'ice'::text, 'end'::text]))"
+        }
+      ],
+      "rls_enabled": true
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = owner_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "blocks",
+      "permissive": "PERMISSIVE",
+      "policyname": "blocks_delete_own",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "blocks",
+      "permissive": "PERMISSIVE",
+      "policyname": "blocks_insert_own",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = owner_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = owner_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "blocks",
+      "permissive": "PERMISSIVE",
+      "policyname": "blocks_select_own",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = owner_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "contacts",
+      "permissive": "PERMISSIVE",
+      "policyname": "contacts_delete_own",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "contacts",
+      "permissive": "PERMISSIVE",
+      "policyname": "contacts_insert_own",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = owner_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = owner_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "contacts",
+      "permissive": "PERMISSIVE",
+      "policyname": "contacts_select_own",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "conversation_state",
+      "permissive": "PERMISSIVE",
+      "policyname": "conversation_state_insert_own",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = owner_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = owner_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "conversation_state",
+      "permissive": "PERMISSIVE",
+      "policyname": "conversation_state_select_own",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = owner_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "conversation_state",
+      "permissive": "PERMISSIVE",
+      "policyname": "conversation_state_update_own",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = owner_id)"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((auth.uid() = sender_id) OR (auth.uid() = receiver_id))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "friend_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "friend_requests_delete_participant",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "friend_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "friend_requests_insert_sender",
+      "schemaname": "public",
+      "with_check": "((auth.uid() = sender_id) AND (sender_id <> receiver_id))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = sender_id) OR (auth.uid() = receiver_id))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "friend_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "friend_requests_select_participant",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = receiver_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "friend_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "friend_requests_update_receiver",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = receiver_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "is_group_member(conversation_id, auth.uid())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "group_conversation_members",
+      "permissive": "PERMISSIVE",
+      "policyname": "group_members_select_members",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "is_group_member(id, auth.uid())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "group_conversations",
+      "permissive": "PERMISSIVE",
+      "policyname": "group_conversations_select_members",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "group_messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "group_messages_insert_members",
+      "schemaname": "public",
+      "with_check": "((sender_id = auth.uid()) AND is_group_member(conversation_id, auth.uid()))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "is_group_member(conversation_id, auth.uid())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "group_messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "group_messages_select_members",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = sender_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "messages_delete_sender",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "messages_insert_sender",
+      "schemaname": "public",
+      "with_check": "can_send_message(sender_id, recipient_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = sender_id) OR (auth.uid() = recipient_id))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "messages_select_participant",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = recipient_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "messages_update_recipient_read",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = recipient_id)"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "profile_details_insert_own",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = user_id) OR (EXISTS ( SELECT 1\n   FROM contacts c\n  WHERE (((c.owner_id = auth.uid()) AND (c.contact_id = profile_details.user_id)) OR ((c.owner_id = profile_details.user_id) AND (c.contact_id = auth.uid()))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "profile_details_select_self_or_contact",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "profile_details_update_own",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "profiles_insert_own",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "profiles_select_authenticated",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(auth.uid() = id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "profiles_update_own",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = id)"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((( SELECT auth.uid() AS uid) = sender_id) OR (( SELECT auth.uid() AS uid) = recipient_id))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "video_call_signals",
+      "permissive": "PERMISSIVE",
+      "policyname": "video_signals_delete_participants",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "video_call_signals",
+      "permissive": "PERMISSIVE",
+      "policyname": "video_signals_insert_sender",
+      "schemaname": "public",
+      "with_check": "((( SELECT auth.uid() AS uid) = sender_id) AND can_send_message(sender_id, recipient_id))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((( SELECT auth.uid() AS uid) = sender_id) OR (( SELECT auth.uid() AS uid) = recipient_id))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "video_call_signals",
+      "permissive": "PERMISSIVE",
+      "policyname": "video_signals_select_participants",
+      "schemaname": "public",
+      "with_check": null
+    }
+  ],
+  "triggers": [
+    {
+      "event": "DELETE",
+      "table": "contacts",
+      "trigger_name": "contacts_delete_reciprocal",
+      "action_timing": "AFTER",
+      "action_statement": "EXECUTE FUNCTION sync_reciprocal_contact_delete()"
+    },
+    {
+      "event": "INSERT",
+      "table": "video_call_signals",
+      "trigger_name": "video_invite_requires_online_recipient",
+      "action_timing": "BEFORE",
+      "action_statement": "EXECUTE FUNCTION enforce_online_video_invite()"
+    },
+    {
+      "event": "INSERT",
+      "table": "video_call_signals",
+      "trigger_name": "video_invite_short_expiry",
+      "action_timing": "BEFORE",
+      "action_statement": "EXECUTE FUNCTION limit_video_invite_lifetime()"
+    }
+  ],
+  "functions": [
+    {
+      "name": "add_member_to_group",
+      "definition": "CREATE OR REPLACE FUNCTION public.add_member_to_group(p_conversation_id uuid, p_invitee_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\n  v_host uuid;\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n\n  select gc.created_by into v_host\n  from public.group_conversations gc\n  where gc.id=p_conversation_id;\n\n  if v_host is null or v_host<>v_me then\n    raise exception 'Solo el administrador puede invitar participantes';\n  end if;\n\n  if exists(\n    select 1 from public.group_conversation_members gm\n    where gm.conversation_id=p_conversation_id and gm.user_id=p_invitee_id\n  ) then\n    return;\n  end if;\n\n  if not exists(\n    select 1 from public.contacts c\n    where c.owner_id=v_me and c.contact_id=p_invitee_id\n  ) then\n    raise exception 'Solo puedes invitar personas de tu lista de contactos';\n  end if;\n\n  insert into public.group_conversation_members(conversation_id,user_id,invited_by)\n  values(p_conversation_id,p_invitee_id,v_me);\nend;\n$function$\n",
+      "identity_args": "p_conversation_id uuid, p_invitee_id uuid"
+    },
+    {
+      "name": "can_send_message",
+      "definition": "CREATE OR REPLACE FUNCTION public.can_send_message(p_sender uuid, p_recipient uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select p_sender=auth.uid()\n    and (\n      p_sender=p_recipient\n      or (\n        exists(select 1 from public.contacts c where c.owner_id=p_sender and c.contact_id=p_recipient)\n        and exists(select 1 from public.contacts c where c.owner_id=p_recipient and c.contact_id=p_sender)\n      )\n    )\n    and not exists(\n      select 1 from public.blocks b\n      where (b.owner_id=p_sender and b.blocked_id=p_recipient)\n         or (b.owner_id=p_recipient and b.blocked_id=p_sender)\n    );\n$function$\n",
+      "identity_args": "p_sender uuid, p_recipient uuid"
+    },
+    {
+      "name": "cancel_friend_request",
+      "definition": "CREATE OR REPLACE FUNCTION public.cancel_friend_request(p_request_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  update public.friend_requests set status='cancelled',responded_at=now()\n  where id=p_request_id and sender_id=auth.uid() and status='pending';\n  if not found then raise exception 'Solicitud no encontrada o no autorizada'; end if;\nend;\n$function$\n",
+      "identity_args": "p_request_id uuid"
+    },
+    {
+      "name": "clear_conversation",
+      "definition": "CREATE OR REPLACE FUNCTION public.clear_conversation(p_peer uuid)\n RETURNS void\n LANGUAGE sql\n SET search_path TO 'public'\nAS $function$\n insert into public.conversation_state(owner_id,peer_id,cleared_at,updated_at)\n values(auth.uid(),p_peer,now(),now())\n on conflict(owner_id,peer_id) do update set cleared_at=excluded.cleared_at,updated_at=now();\n$function$\n",
+      "identity_args": "p_peer uuid"
+    },
+    {
+      "name": "create_group_from_direct",
+      "definition": "CREATE OR REPLACE FUNCTION public.create_group_from_direct(p_peer_id uuid, p_invitee_id uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\n  v_host uuid;\n  v_room uuid;\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n  if p_peer_id is null or p_invitee_id is null or p_peer_id in (v_me,p_invitee_id) or p_invitee_id=v_me then\n    raise exception 'Participantes inválidos';\n  end if;\n  if not exists(\n    select 1 from public.contacts c\n    where c.owner_id=v_me and c.contact_id=p_peer_id\n  ) then\n    raise exception 'La conversación debe ser con un contacto';\n  end if;\n\n  v_host:=public.direct_conversation_host(p_peer_id);\n  if v_host<>v_me then\n    raise exception 'Solo el administrador puede invitar participantes';\n  end if;\n\n  if not exists(\n    select 1 from public.contacts c\n    where c.owner_id=v_me and c.contact_id=p_invitee_id\n  ) then\n    raise exception 'Solo puedes invitar personas de tu lista de contactos';\n  end if;\n\n  insert into public.group_conversations(created_by,title)\n  values(v_host,'') returning id into v_room;\n\n  insert into public.group_conversation_members(conversation_id,user_id,invited_by) values\n    (v_room,v_host,v_host),\n    (v_room,p_peer_id,v_host),\n    (v_room,p_invitee_id,v_host);\n\n  return v_room;\nend;\n$function$\n",
+      "identity_args": "p_peer_id uuid, p_invitee_id uuid"
+    },
+    {
+      "name": "create_group_from_direct",
+      "definition": "CREATE OR REPLACE FUNCTION public.create_group_from_direct(p_peer_id uuid, p_invitee_id uuid, p_title text DEFAULT ''::text)\n RETURNS TABLE(conversation_id uuid, created boolean)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\n  v_group uuid;\n  v_signature text;\n  v_title text:=left(trim(coalesce(p_title,'')),60);\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n  if p_peer_id in (v_me,p_invitee_id) or p_invitee_id=v_me then\n    raise exception 'Participantes inválidos';\n  end if;\n  if not exists(\n    select 1 from public.contacts c\n    where c.owner_id=v_me and c.contact_id=p_peer_id\n  ) then\n    raise exception 'La conversación debe ser con un contacto';\n  end if;\n  if not exists(\n    select 1 from public.contacts c\n    where c.owner_id in (v_me,p_peer_id) and c.contact_id=p_invitee_id\n  ) then\n    raise exception 'Solo puedes invitar contactos de alguno de los participantes';\n  end if;\n\n  select md5(string_agg(x::text, ',' order by x::text))\n    into v_signature\n  from unnest(array[v_me,p_peer_id,p_invitee_id]) as x;\n\n  select g.id into v_group\n  from public.group_conversations g\n  where g.member_signature=v_signature\n  limit 1;\n\n  if v_group is not null then\n    return query select v_group,false;\n    return;\n  end if;\n\n  insert into public.group_conversations(created_by,title,member_signature)\n  values(v_me,v_title,v_signature)\n  returning id into v_group;\n\n  insert into public.group_conversation_members(conversation_id,user_id,invited_by)\n  values\n    (v_group,v_me,v_me),\n    (v_group,p_peer_id,v_me),\n    (v_group,p_invitee_id,v_me);\n\n  return query select v_group,true;\nexception\n  when unique_violation then\n    select g.id into v_group\n    from public.group_conversations g\n    where g.member_signature=v_signature\n    limit 1;\n    if v_group is not null then\n      return query select v_group,false;\n      return;\n    end if;\n    raise;\nend;\n$function$\n",
+      "identity_args": "p_peer_id uuid, p_invitee_id uuid, p_title text"
+    },
+    {
+      "name": "direct_conversation_host",
+      "definition": "CREATE OR REPLACE FUNCTION public.direct_conversation_host(p_peer_id uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\n  v_host uuid;\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n  if p_peer_id is null or p_peer_id=v_me then raise exception 'Participante inválido'; end if;\n\n  select m.sender_id into v_host\n  from public.messages m\n  where (m.sender_id=v_me and m.recipient_id=p_peer_id)\n     or (m.sender_id=p_peer_id and m.recipient_id=v_me)\n  order by m.created_at asc, m.id asc\n  limit 1;\n\n  return coalesce(v_host,v_me);\nend;\n$function$\n",
+      "identity_args": "p_peer_id uuid"
+    },
+    {
+      "name": "enforce_online_video_invite",
+      "definition": "CREATE OR REPLACE FUNCTION public.enforce_online_video_invite()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  recipient_status text;\n  recipient_seen timestamptz;\nbegin\n  if new.signal_type <> 'invite' then\n    return new;\n  end if;\n\n  select p.status, p.last_seen_at\n    into recipient_status, recipient_seen\n  from public.profiles p\n  where p.id = new.recipient_id;\n\n  if recipient_status is null\n     or recipient_status = 'offline'\n     or recipient_seen is null\n     or recipient_seen < now() - interval '15 seconds' then\n    raise exception 'RECIPIENT_OFFLINE';\n  end if;\n\n  return new;\nend;\n$function$\n",
+      "identity_args": ""
+    },
+    {
+      "name": "find_latest_conversation_room",
+      "definition": "CREATE OR REPLACE FUNCTION public.find_latest_conversation_room(p_peer_id uuid)\n RETURNS uuid\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select gc.id\n  from public.group_conversations gc\n  where exists(\n    select 1 from public.group_conversation_members a\n    where a.conversation_id=gc.id and a.user_id=auth.uid()\n  )\n  and exists(\n    select 1 from public.group_conversation_members b\n    where b.conversation_id=gc.id and b.user_id=p_peer_id\n  )\n  and (\n    select count(*) from public.group_conversation_members m\n    where m.conversation_id=gc.id\n  ) > 2\n  order by gc.created_at desc\n  limit 1;\n$function$\n",
+      "identity_args": "p_peer_id uuid"
+    },
+    {
+      "name": "get_direct_invite_candidates",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_direct_invite_candidates(p_peer_id uuid)\n RETURNS TABLE(id uuid, email text, display_name text, personal_message text, display_picture text, status text)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\n  v_host uuid;\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n  if p_peer_id is null or p_peer_id=v_me then raise exception 'Participante inválido'; end if;\n  if not exists(\n    select 1 from public.contacts c\n    where c.owner_id=v_me and c.contact_id=p_peer_id\n  ) then\n    raise exception 'La conversación debe ser con un contacto';\n  end if;\n\n  v_host:=public.direct_conversation_host(p_peer_id);\n  if v_host<>v_me then\n    raise exception 'Solo el administrador puede invitar participantes';\n  end if;\n\n  return query\n  select p.id,p.email,p.display_name,p.personal_message,p.display_picture,p.status\n  from public.contacts c\n  join public.profiles p on p.id=c.contact_id\n  where c.owner_id=v_me\n    and p.id<>p_peer_id\n    and p.id<>v_me\n  order by p.display_name,p.email;\nend;\n$function$\n",
+      "identity_args": "p_peer_id uuid"
+    },
+    {
+      "name": "get_group_invite_candidates",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_group_invite_candidates(p_conversation_id uuid)\n RETURNS TABLE(id uuid, email text, display_name text, personal_message text, display_picture text, status text)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\n  v_host uuid;\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n\n  select gc.created_by into v_host\n  from public.group_conversations gc\n  where gc.id=p_conversation_id;\n\n  if v_host is null or v_host<>v_me then\n    raise exception 'Solo el administrador puede invitar participantes';\n  end if;\n\n  return query\n  select p.id,p.email,p.display_name,p.personal_message,p.display_picture,p.status\n  from public.contacts c\n  join public.profiles p on p.id=c.contact_id\n  where c.owner_id=v_me\n    and not exists(\n      select 1\n      from public.group_conversation_members gm\n      where gm.conversation_id=p_conversation_id\n        and gm.user_id=p.id\n    )\n  order by p.display_name,p.email;\nend;\n$function$\n",
+      "identity_args": "p_conversation_id uuid"
+    },
+    {
+      "name": "get_mutual_contact_ids",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_mutual_contact_ids()\n RETURNS TABLE(contact_id uuid)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select c.contact_id\n  from public.contacts c\n  where c.owner_id=auth.uid()\n    and exists (\n      select 1 from public.contacts r\n      where r.owner_id=c.contact_id\n        and r.contact_id=c.owner_id\n    )\n  order by c.created_at;\n$function$\n",
+      "identity_args": ""
+    },
+    {
+      "name": "handle_new_user",
+      "definition": "CREATE OR REPLACE FUNCTION public.handle_new_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  insert into public.profiles (id,email,display_name)\n  values (\n    new.id,\n    coalesce(new.email,''),\n    coalesce(new.raw_user_meta_data->>'display_name', split_part(coalesce(new.email,'Messenger User'),'@',1), 'Messenger User')\n  )\n  on conflict (id) do nothing;\n  return new;\nend;\n$function$\n",
+      "identity_args": ""
+    },
+    {
+      "name": "heartbeat_presence",
+      "definition": "CREATE OR REPLACE FUNCTION public.heartbeat_presence()\n RETURNS timestamp with time zone\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  touched_at timestamptz := now();\nbegin\n  if auth.uid() is null then\n    raise exception 'Not authenticated';\n  end if;\n\n  update public.profiles\n  set last_seen_at = touched_at,\n      updated_at = now()\n  where id = auth.uid();\n\n  return touched_at;\nend;\n$function$\n",
+      "identity_args": ""
+    },
+    {
+      "name": "is_group_member",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_group_member(p_conversation_id uuid, p_user_id uuid DEFAULT auth.uid())\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists(\n    select 1 from public.group_conversation_members m\n    where m.conversation_id=p_conversation_id and m.user_id=p_user_id\n  );\n$function$\n",
+      "identity_args": "p_conversation_id uuid, p_user_id uuid"
+    },
+    {
+      "name": "limit_video_invite_lifetime",
+      "definition": "CREATE OR REPLACE FUNCTION public.limit_video_invite_lifetime()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nbegin\n  if new.signal_type='invite' then\n    new.expires_at := least(new.expires_at, now() + interval '45 seconds');\n  end if;\n  return new;\nend;\n$function$\n",
+      "identity_args": ""
+    },
+    {
+      "name": "mark_conversation_read",
+      "definition": "CREATE OR REPLACE FUNCTION public.mark_conversation_read(p_peer_id uuid)\n RETURNS void\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  update public.messages set read_at=coalesce(read_at,now())\n  where recipient_id=auth.uid() and sender_id=p_peer_id and read_at is null;\n$function$\n",
+      "identity_args": "p_peer_id uuid"
+    },
+    {
+      "name": "mark_presence_offline",
+      "definition": "CREATE OR REPLACE FUNCTION public.mark_presence_offline()\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if auth.uid() is null then\n    raise exception 'Not authenticated';\n  end if;\n\n  update public.profiles\n  set status = 'offline',\n      last_seen_at = null,\n      updated_at = now()\n  where id = auth.uid();\nend;\n$function$\n",
+      "identity_args": ""
+    },
+    {
+      "name": "remove_conversation_participant",
+      "definition": "CREATE OR REPLACE FUNCTION public.remove_conversation_participant(p_conversation_id uuid, p_member_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\n  v_host uuid;\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n  select created_by into v_host from public.group_conversations where id=p_conversation_id;\n  if v_host is null or v_host<>v_me then\n    raise exception 'Solo el administrador puede eliminar participantes';\n  end if;\n  if p_member_id=v_host then\n    raise exception 'El administrador no puede eliminarse de la conversación';\n  end if;\n\n  delete from public.group_conversation_members\n  where conversation_id=p_conversation_id and user_id=p_member_id;\nend;\n$function$\n",
+      "identity_args": "p_conversation_id uuid, p_member_id uuid"
+    },
+    {
+      "name": "remove_friend",
+      "definition": "CREATE OR REPLACE FUNCTION public.remove_friend(p_contact_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n  if p_contact_id is null or p_contact_id=v_me then raise exception 'Contacto inválido'; end if;\n\n  delete from public.contacts\n  where (owner_id=v_me and contact_id=p_contact_id)\n     or (owner_id=p_contact_id and contact_id=v_me);\n\n  delete from public.friend_requests\n  where (sender_id=v_me and receiver_id=p_contact_id)\n     or (sender_id=p_contact_id and receiver_id=v_me);\nend;\n$function$\n",
+      "identity_args": "p_contact_id uuid"
+    },
+    {
+      "name": "rename_group",
+      "definition": "CREATE OR REPLACE FUNCTION public.rename_group(p_conversation_id uuid, p_title text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_me uuid:=auth.uid();\nbegin\n  if v_me is null then raise exception 'No autenticado'; end if;\n  if not exists(\n    select 1 from public.group_conversations g\n    where g.id=p_conversation_id and g.created_by=v_me\n  ) then\n    raise exception 'Solo quien creó el grupo puede cambiar el nombre';\n  end if;\n\n  update public.group_conversations\n  set title=left(trim(coalesce(p_title,'')),60)\n  where id=p_conversation_id;\nend;\n$function$\n",
+      "identity_args": "p_conversation_id uuid, p_title text"
+    },
+    {
+      "name": "respond_friend_request",
+      "definition": "CREATE OR REPLACE FUNCTION public.respond_friend_request(p_request uuid, p_accept boolean)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare r public.friend_requests;\nbegin\n  select * into r from public.friend_requests where id=p_request and receiver_id=auth.uid() and status='pending' for update;\n  if not found then raise exception 'Solicitud no disponible'; end if;\n  update public.friend_requests set status=case when p_accept then 'accepted' else 'rejected' end, responded_at=now() where id=p_request;\n  if p_accept then\n    insert into public.contacts(owner_id,contact_id) values(r.sender_id,r.receiver_id) on conflict do nothing;\n    insert into public.contacts(owner_id,contact_id) values(r.receiver_id,r.sender_id) on conflict do nothing;\n  end if;\nend$function$\n",
+      "identity_args": "p_request uuid, p_accept boolean"
+    },
+    {
+      "name": "respond_friend_request",
+      "definition": "CREATE OR REPLACE FUNCTION public.respond_friend_request(p_request_id uuid, p_action text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare r public.friend_requests%rowtype;\nbegin\n  select * into r from public.friend_requests where id=p_request_id for update;\n  if not found then raise exception 'Solicitud no encontrada'; end if;\n  if r.receiver_id <> auth.uid() then raise exception 'No autorizado'; end if;\n  if r.status <> 'pending' then raise exception 'La solicitud ya fue procesada'; end if;\n  if p_action='accept' then\n    update public.friend_requests set status='accepted',responded_at=now() where id=p_request_id;\n    insert into public.contacts(owner_id,contact_id) values(r.sender_id,r.receiver_id) on conflict do nothing;\n    insert into public.contacts(owner_id,contact_id) values(r.receiver_id,r.sender_id) on conflict do nothing;\n  elsif p_action='decline' then\n    update public.friend_requests set status='declined',responded_at=now() where id=p_request_id;\n  else\n    raise exception 'Acción inválida';\n  end if;\nend;\n$function$\n",
+      "identity_args": "p_request_id uuid, p_action text"
+    },
+    {
+      "name": "send_friend_request",
+      "definition": "CREATE OR REPLACE FUNCTION public.send_friend_request(p_receiver_id uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare v_id uuid;\nbegin\n  if auth.uid() is null then raise exception 'No autenticado'; end if;\n  if p_receiver_id=auth.uid() then raise exception 'No puedes enviarte una solicitud a ti mismo'; end if;\n  if not exists(select 1 from public.profiles where id=p_receiver_id) then raise exception 'Usuario no encontrado'; end if;\n  if exists(select 1 from public.contacts where owner_id=auth.uid() and contact_id=p_receiver_id) then raise exception 'El usuario ya está en tus contactos'; end if;\n  if exists(select 1 from public.blocks b where (b.owner_id=auth.uid() and b.blocked_id=p_receiver_id) or (b.owner_id=p_receiver_id and b.blocked_id=auth.uid())) then raise exception 'No se puede enviar la solicitud'; end if;\n  insert into public.friend_requests(sender_id,receiver_id) values(auth.uid(),p_receiver_id) returning id into v_id;\n  return v_id;\nend;\n$function$\n",
+      "identity_args": "p_receiver_id uuid"
+    },
+    {
+      "name": "sync_reciprocal_contact_delete",
+      "definition": "CREATE OR REPLACE FUNCTION public.sync_reciprocal_contact_delete()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nbegin\n  if pg_trigger_depth() < 2 then\n    delete from public.contacts\n    where owner_id=old.contact_id and contact_id=old.owner_id;\n  end if;\n\n  delete from public.friend_requests\n  where (sender_id=old.owner_id and receiver_id=old.contact_id)\n     or (sender_id=old.contact_id and receiver_id=old.owner_id);\n\n  return old;\nend;\n$function$\n",
+      "identity_args": ""
+    }
+  ],
+  "generated_at": "2026-09-18T01:56:09.439421+00:00"
+}
