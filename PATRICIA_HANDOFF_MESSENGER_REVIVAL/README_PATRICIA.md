@@ -19,6 +19,7 @@ Carpeta de transferencia técnica separada del código operativo del proyecto.
 - `documentation/03_DATABASE_SUPABASE_AND_RESTORE.md`
 - `documentation/04_DEVELOPMENT_DEPLOYMENT_AND_OPERATIONS.md`
 - `documentation/05_FILE_MAP_AND_MAINTENANCE.md`
+- `documentation/06_AI_AGENT_INSTALLATION_AND_RUNTIME_GUIDE.md` — guía específica para Claude, ChatGPT Work u otros agentes de desarrollo.
 
 ## Resumen ejecutivo
 
