@@ -58,6 +58,10 @@
         const who = await profileName(row.sender_id);
         window.MessengerNudges?.receive?.({ id: row.id, senderId: row.sender_id, who, active: active?.id === row.sender_id });
         if (active?.id === row.sender_id && !alreadyRendered) shouldReloadActive = true;
+      } else if (row.kind === 'wink') {
+        const who = await profileName(row.sender_id);
+        window.MessengerWinks?.receive?.({ id: row.id, senderId: row.sender_id, who, winkId: row.body, active: active?.id === row.sender_id });
+        if (active?.id === row.sender_id && !alreadyRendered) shouldReloadActive = true;
       } else if (active?.id === row.sender_id) {
         if (!alreadyRendered) shouldReloadActive = true;
       } else if (!alreadyRendered) {
@@ -77,7 +81,7 @@
     polling = true;
     try {
       let q = client.from('messages')
-        .select('id,sender_id,recipient_id,kind,created_at')
+        .select('id,sender_id,recipient_id,kind,body,created_at')
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .order('created_at', { ascending: true })
         .limit(100);
@@ -100,7 +104,7 @@
       let q = client.from('messages')
         .select('id,sender_id,recipient_id,kind,created_at')
         .eq('recipient_id', user.id)
-        .eq('kind', 'nudge')
+        .in('kind', ['nudge','wink'])
         .order('created_at', { ascending: true })
         .limit(50);
       if (nudgeCursor) q = q.gte('created_at', nudgeCursor);
@@ -113,13 +117,14 @@
         seenNudges.add(row.id);
         if (!nudgeCursor || new Date(row.created_at) > new Date(nudgeCursor)) nudgeCursor = row.created_at;
         const who = await profileName(row.sender_id);
-        window.MessengerNudges?.receive?.({ id: row.id, senderId: row.sender_id, who, active: active?.id === row.sender_id });
+        if (row.kind === 'wink') window.MessengerWinks?.receive?.({ id: row.id, senderId: row.sender_id, who, winkId: row.body, active: active?.id === row.sender_id });
+        else window.MessengerNudges?.receive?.({ id: row.id, senderId: row.sender_id, who, active: active?.id === row.sender_id });
         const alreadyRendered = !!document.querySelector(`[data-message-id="${CSS.escape(String(row.id))}"]`);
         if (active?.id === row.sender_id && !alreadyRendered) await window.MessengerChat?.reload?.();
       }
       if (seenNudges.size > 300) seenNudges.clear();
     } catch (error) {
-      console.warn('Nudge fallback polling failed', error);
+      console.warn('Nudge/Wink fallback polling failed', error);
     } finally {
       nudgePolling = false;
     }
