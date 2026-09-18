@@ -309,7 +309,7 @@ function subscribeMemberships(){
     }).subscribe();
 }
 function removeLegacyGroupUi(){
-  for(const sel of ['#groupsToolbarButton','.direct-groups-button','#groupListDialog','#groupNameDialog','#groupInviteDialog','#groupChatWindow'])document.querySelectorAll(sel).forEach(el=>el.remove());
+  for(const sel of ['#directGroupsBtn','.direct-groups-button','#groupsToolbarButton','.groups-toolbar-button','#groupListDialog','#groupNameDialog','#groupInviteDialog','#groupChatWindow'])document.querySelectorAll(sel).forEach(el=>el.remove());
 }
 function cleanup(){
   unsubscribeRoom();if(membershipChannel&&client)client.removeChannel?.(membershipChannel);membershipChannel=null;
