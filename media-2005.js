@@ -1,9 +1,48 @@
 (()=>{
+if(window.__MSN75MediaInstalled)return;window.__MSN75MediaInstalled=true;
 const $=s=>document.querySelector(s),pane=$('#messagePane');
 const asset='assets/emojis-msn-2005/';
 function toast(t){const el=$('#toast');if(!el)return;el.textContent=t;el.classList.add('show');clearTimeout(window.__mediaToast);window.__mediaToast=setTimeout(()=>el.classList.remove('show'),2200)}
 async function addVoiceClip(blob){if(window.MessengerChat?.sendVoice)return window.MessengerChat.sendVoice(blob);toast('El chat persistente todavía no está disponible.')}
-window.MSN75Voice={recording:false,recorder:null,stream:null,timer:null,async start(button){if(this.recording)return;try{this.stream=await navigator.mediaDevices.getUserMedia({audio:true});const chunks=[];this.recorder=new MediaRecorder(this.stream);this.recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);this.recorder.onstop=()=>{clearTimeout(this.timer);this.stream?.getTracks().forEach(t=>t.stop());this.stream=null;this.recording=false;button?.classList.remove('recording');const label=button?.querySelector('b');if(label)label.textContent='Voice Clip';if(chunks.length)addVoiceClip(new Blob(chunks,{type:this.recorder.mimeType||'audio/webm'}))};this.recorder.start();this.recording=true;button?.classList.add('recording');const label=button?.querySelector('b');if(label)label.textContent='Grabando…';this.timer=setTimeout(()=>this.stop(),15000)}catch(e){toast('Permite el micrófono para enviar Voice Clips.')}},stop(){if(this.recorder?.state==='recording')this.recorder.stop()}};
+window.MSN75Voice={
+ recording:false,starting:false,stopping:false,recorder:null,stream:null,timer:null,session:0,sentSessions:new Set(),
+ async start(button){
+   if(this.recording||this.starting||this.stopping)return;
+   const session=++this.session;this.starting=true;
+   try{
+     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+     if(session!==this.session){stream.getTracks().forEach(t=>t.stop());return}
+     this.stream=stream;const chunks=[],recorder=new MediaRecorder(stream);this.recorder=recorder;
+     recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
+     recorder.onstop=async()=>{
+       clearTimeout(this.timer);this.timer=null;
+       stream.getTracks().forEach(t=>t.stop());
+       if(this.stream===stream)this.stream=null;
+       if(this.recorder===recorder)this.recorder=null;
+       this.recording=false;this.starting=false;this.stopping=false;
+       button?.classList.remove('recording');const label=button?.querySelector('b');if(label)label.textContent='Voice Clip';
+       if(!chunks.length||this.sentSessions.has(session))return;
+       this.sentSessions.add(session);
+       if(this.sentSessions.size>40){const first=this.sentSessions.values().next().value;this.sentSessions.delete(first)}
+       await addVoiceClip(new Blob(chunks,{type:recorder.mimeType||'audio/webm'}));
+     };
+     recorder.start();this.starting=false;this.recording=true;
+     button?.classList.add('recording');const label=button?.querySelector('b');if(label)label.textContent='Grabando…';
+     this.timer=setTimeout(()=>this.stop(),15000);
+   }catch(e){
+     this.starting=false;this.stopping=false;this.recording=false;
+     this.stream?.getTracks().forEach(t=>t.stop());this.stream=null;this.recorder=null;
+     toast('Permite el micrófono para enviar Voice Clips.');
+   }
+ },
+ stop(){
+   if(this.starting){return}
+   if(!this.recording||this.stopping)return;
+   this.stopping=true;this.recording=false;clearTimeout(this.timer);this.timer=null;
+   const recorder=this.recorder;
+   if(recorder?.state==='recording')recorder.stop();else this.stopping=false;
+ }
+};
 const toolbar=$('.compose-toolbar');if(toolbar){toolbar.innerHTML=`<button class="msn-compose-tool font-btn" title="Formato de texto"><img src="${asset}01-formato-texto-A.png" alt="Formato"><span class="drop">⌄</span></button><button class="msn-compose-tool emoji-btn" data-emoji="😀" title="Emoticonos"><img src="${asset}02-emoticon-sonrisa.png" alt="Emoticonos"><span class="drop">⌄</span></button><button class="msn-compose-tool voice-clip-btn" title="Mantén pulsado para grabar un Voice Clip de hasta 15 segundos"><img src="${asset}03-voice-clip-microfono.png" alt="Voice Clip"><b>Voice Clip</b></button><button class="msn-compose-tool emoji-btn" data-emoji="😉" title="Guiños"><img src="${asset}04-emoticon-guino.png" alt="Guiños"><span class="drop">⌄</span></button><button class="msn-compose-tool backgrounds-btn" title="Fondos de conversación"><img src="${asset}05-enviar-imagen.png" alt="Fondos"><span class="drop">⌄</span></button><button class="msn-compose-tool packs-btn" title="Packs de contenido"><img src="${asset}06-regalo.png" alt="Packs"><span class="drop">⌄</span></button><button id="nudgeBtn" class="msn-compose-tool nudge-visible" title="Zumbido"><img src="${asset}07-zumbido-nudge.png" alt="Zumbido"><b>Zumbido</b></button><button id="soundToggle" class="sound-toggle" title="Sonido">🔊</button>`;toolbar.querySelectorAll('.emoji-btn').forEach(b=>b.onclick=()=>{const input=$('#messageInput');input.value+=b.dataset.emoji;input.focus()});const voice=toolbar.querySelector('.voice-clip-btn');if(voice){voice.onpointerdown=e=>{e.preventDefault();window.MSN75Voice.start(voice)};voice.onpointerup=()=>window.MSN75Voice.stop();voice.onpointerleave=()=>window.MSN75Voice.recording&&window.MSN75Voice.stop()}toolbar.querySelector('#nudgeBtn')?.addEventListener('click',async()=>{const chat=$('#chatWindow');chat.classList.remove('nudging');void chat.offsetWidth;chat.classList.add('nudging');if(typeof playNudge==='function')playNudge();await window.MessengerChat?.sendSpecial?.('nudge','')})}
 window.addEventListener('keydown',e=>{if(e.key==='F2'&&!e.repeat){e.preventDefault();window.MSN75Voice.start(toolbar?.querySelector('.voice-clip-btn'))}});window.addEventListener('keyup',e=>{if(e.key==='F2'){e.preventDefault();window.MSN75Voice.stop()}});
 const ink=document.querySelector('.ink-tabs button:first-child');if(ink)ink.innerHTML=`<img src="${asset}09-escritura-manuscrita.png" alt="Escritura manuscrita">`;
