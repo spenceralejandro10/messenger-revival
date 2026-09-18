@@ -12,6 +12,8 @@
   let profile = null;
   let channel = null;
   let pollTimer = null;
+  let callTimer = null;
+  let disconnectTimer = null;
   let polling = false;
   let realtimeReady = false;
   let lastSignalId = 0;
@@ -90,6 +92,7 @@
       return;
     }
     const live = liveOverride?.id === peer.id ? liveOverride : await getLivePeerPresence(peer.id);
+    if (activePeer()?.id !== peer.id) return;
     const online = isPresenceOnline(live);
     videoButton.disabled = !online;
     videoButton.title = online ? 'Iniciar videollamada' : 'Este contacto está desconectado';
@@ -135,17 +138,42 @@
     }
   }
 
-  async function sendSignal(signalType, payload = {}) {
-    if (!client || !user || !call) throw new Error('Videollamada no disponible.');
+  async function sendSignalTo(callId, peerId, signalType, payload = {}) {
+    if (!client || !user || !callId || !peerId) throw new Error('Videollamada no disponible.');
     const { data, error } = await client.from('video_call_signals').insert({
-      call_id: call.id,
+      call_id: callId,
       sender_id: user.id,
-      recipient_id: call.peerId,
+      recipient_id: peerId,
       signal_type: signalType,
       payload,
     }).select('id').single();
     if (error) throw error;
     return data;
+  }
+  async function sendSignal(signalType, payload = {}) {
+    if (!call) throw new Error('Videollamada no disponible.');
+    return sendSignalTo(call.id, call.peerId, signalType, payload);
+  }
+
+  function clearCallTimers() {
+    clearTimeout(callTimer);
+    clearTimeout(disconnectTimer);
+    callTimer = null;
+    disconnectTimer = null;
+  }
+
+  function armRingingTimeout() {
+    clearTimeout(callTimer);
+    const expectedId = call?.id;
+    callTimer = setTimeout(async () => {
+      if (!call || call.id !== expectedId || call.phase !== 'ringing') return;
+      const outgoing = call.role === 'caller';
+      const name = call.peerName;
+      if (outgoing) await sendSignal('cancel', { reason: 'timeout' }).catch(() => {});
+      restoreRail();
+      call = null;
+      addSystem(outgoing ? `${name} no respondió la videollamada.` : `La invitación de videollamada de ${name} expiró.`);
+    }, INVITE_MAX_AGE_MS);
   }
 
   function stopMedia() {
@@ -164,6 +192,7 @@
   }
 
   function restoreRail() {
+    clearCallTimers();
     stopMedia();
     rail.classList.remove('video-call');
     if (savedTopHTML) topFrame.innerHTML = savedTopHTML;
@@ -242,12 +271,19 @@
       const status = controls.querySelector('.video-call-status');
       if (!status) return;
       if (state === 'connected') {
+        clearTimeout(disconnectTimer);
+        disconnectTimer = null;
         if (call) call.phase = 'active';
         status.textContent = 'Conversación de vídeo activa';
       } else if (state === 'connecting') {
         status.textContent = 'Conectando videollamada…';
       } else if (state === 'disconnected') {
         status.textContent = 'Reconectando videollamada…';
+        clearTimeout(disconnectTimer);
+        const expectedId = call?.id;
+        disconnectTimer = setTimeout(() => {
+          if (call?.id === expectedId && pc?.connectionState === 'disconnected') finish(true, 'La conexión de vídeo se perdió.').catch(() => {});
+        }, 10000);
       } else if (state === 'failed') {
         status.textContent = 'No fue posible conectar la videollamada';
         finish(false, 'La conexión de vídeo falló.').catch(() => {});
@@ -285,6 +321,8 @@
 
   async function acceptIncoming() {
     if (!call || call.role !== 'recipient' || call.phase !== 'ringing') return;
+    clearTimeout(callTimer);
+    callTimer = null;
     call.phase = 'connecting';
     buildCallUI();
     try {
@@ -349,6 +387,7 @@
     setBanner(`Llamando a ${call.peerName}…`, [{ label: 'Cancelar', action: cancelOutgoing }]);
     try {
       await sendSignal('invite', { from_name: profile?.display_name || user.email || 'Un contacto' });
+      armRingingTimeout();
     } catch (error) {
       call = null;
       hideBanner();
@@ -369,37 +408,43 @@
       return;
     }
     if (!(await isMutualContact(signal.sender_id))) {
-      await client?.from('video_call_signals').delete().eq('id', signal.id).catch?.(() => {});
+      await discardSignal(signal.id);
       return;
     }
     if (call) {
       if (call.id === signal.call_id) return;
-      const previous = call;
-      call = { id: signal.call_id, peerId: signal.sender_id };
-      await sendSignal('busy').catch(() => {});
-      call = previous;
+      await sendSignalTo(signal.call_id, signal.sender_id, 'busy').catch(() => {});
       return;
     }
+
+    const reservation = {
+      id: signal.call_id,
+      peerId: signal.sender_id,
+      peerName: signal.payload?.from_name || 'Un contacto',
+      role: 'recipient',
+      phase: 'preparing',
+    };
+    call = reservation;
 
     const { data: sender } = await client.from('profiles')
       .select('id,email,display_name,display_picture,status,personal_message')
       .eq('id', signal.sender_id)
       .maybeSingle();
-    if (!sender) return;
+    if (!sender) {
+      if (call === reservation) call = null;
+      return;
+    }
 
     if (activePeer()?.id !== sender.id) await window.MessengerApp?.openContact?.(sender);
-    call = {
-      id: signal.call_id,
-      peerId: signal.sender_id,
-      peerName: sender.display_name || sender.email || signal.payload?.from_name || 'Un contacto',
-      role: 'recipient',
-      phase: 'ringing',
-    };
+    if (call !== reservation) return;
+    reservation.peerName = sender.display_name || sender.email || reservation.peerName;
+    reservation.phase = 'ringing';
 
     setBanner(`${call.peerName} te invita a una videollamada.`, [
       { label: 'Aceptar', action: acceptIncoming, primary: true },
       { label: 'Rechazar', action: rejectIncoming },
     ]);
+    armRingingTimeout();
     window.MessengerSounds?.playMessage?.();
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Messenger Revival', { body: `${call.peerName} te invita a una videollamada.` });
@@ -409,6 +454,7 @@
   async function handleSignal(signal) {
     if (!user || !signal?.id || signal.recipient_id !== user.id || processed.has(signal.id)) return;
     processed.add(signal.id);
+    if (processed.size > 1000) processed.delete(processed.values().next().value);
     const numericId = Number(signal.id) || 0;
     if (numericId > lastSignalId) lastSignalId = numericId;
     if (signal.expires_at && new Date(signal.expires_at) <= new Date()) return;
@@ -426,6 +472,8 @@
     if (!call || signal.call_id !== call.id || signal.sender_id !== call.peerId) return;
 
     if (signal.signal_type === 'accept' && call.role === 'caller' && call.phase === 'ringing') {
+      clearTimeout(callTimer);
+      callTimer = null;
       call.phase = 'connecting';
       addSystem(`${call.peerName} aceptó tu invitación de videollamada.`);
       await beginAsCaller();
@@ -523,6 +571,7 @@
 
   function cleanupSession() {
     clearInterval(pollTimer);
+    clearCallTimers();
     pollTimer = null;
     polling = false;
     realtimeReady = false;
@@ -567,7 +616,7 @@
     pollSignals();
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && user) pollSignals();
+    if (document.visibilityState === 'visible' && user && !realtimeReady) pollSignals();
   });
   window.addEventListener('beforeunload', stopMedia);
   window.MessengerVideoCall = { invite, finish, poll: pollSignals };
