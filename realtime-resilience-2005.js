@@ -102,7 +102,7 @@
     nudgePolling = true;
     try {
       let q = client.from('messages')
-        .select('id,sender_id,recipient_id,kind,created_at')
+        .select('id,sender_id,recipient_id,kind,body,created_at')
         .eq('recipient_id', user.id)
         .in('kind', ['nudge','wink'])
         .order('created_at', { ascending: true })
