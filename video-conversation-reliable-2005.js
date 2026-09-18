@@ -23,6 +23,7 @@
   let localStream = null;
   let remoteStream = null;
   let pendingIce = [];
+  let incomingNotification = null;
   let savedTopHTML = '';
   let savedBottomHTML = '';
   const processed = new Set();
@@ -163,6 +164,12 @@
     disconnectTimer = null;
   }
 
+  function stopIncomingAlert() {
+    window.MessengerSounds?.stopCall?.();
+    try { incomingNotification?.close(); } catch {}
+    incomingNotification = null;
+  }
+
   function armRingingTimeout() {
     clearTimeout(callTimer);
     const expectedId = call?.id;
@@ -193,6 +200,7 @@
   }
 
   function restoreRail() {
+    stopIncomingAlert();
     clearCallTimers();
     stopMedia();
     rail.classList.remove('video-call');
@@ -207,6 +215,7 @@
   }
 
   function buildCallUI() {
+    stopIncomingAlert();
     if (!rail.classList.contains('video-call')) {
       savedTopHTML = topFrame.innerHTML;
       savedBottomHTML = bottomFrame.innerHTML;
@@ -234,14 +243,81 @@
     return localStream;
   }
 
+  async function createOpenRelayIceServers() {
+    const configured = window.MESSENGER_TURN_ICE_SERVERS;
+    if (Array.isArray(configured) && configured.length) return configured;
+
+    const stunServers = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+    ];
+
+    try {
+      // Open Relay publishes this shared secret for its free staticauth
+      // service. A short-lived TURN credential handles blocked P2P routes.
+      const username = `${Math.floor(Date.now() / 1000) + 3600}:messenger-revival`;
+      const key = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode('openrelayprojectsecret'),
+        { name: 'HMAC', hash: 'SHA-1' },
+        false,
+        ['sign'],
+      );
+      const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(username));
+      const credential = btoa(String.fromCharCode(...new Uint8Array(signature)));
+      return [
+        ...stunServers,
+        {
+          urls: [
+            'turn:staticauth.openrelay.metered.ca:80?transport=udp',
+            'turn:staticauth.openrelay.metered.ca:80?transport=tcp',
+            'turn:staticauth.openrelay.metered.ca:443?transport=tcp',
+            'turns:staticauth.openrelay.metered.ca:443?transport=tcp',
+          ],
+          username,
+          credential,
+        },
+      ];
+    } catch (error) {
+      console.warn('TURN credentials could not be prepared; using STUN only', error);
+      return stunServers;
+    }
+  }
+
+  async function playRemoteVideo() {
+    const video = $('#msnRemoteVideo');
+    const prompt = $('#remoteVideoWait');
+    if (!video) return;
+    try {
+      video.muted = false;
+      await video.play();
+      prompt?.remove();
+    } catch {
+      // If remote audio autoplay is blocked, show video muted and let a user
+      // gesture enable its sound instead of leaving a black frame.
+      video.muted = true;
+      await video.play().catch(() => {});
+      if (!prompt) return;
+      prompt.textContent = 'Haz clic para activar el sonido';
+      prompt.classList.add('video-unmute');
+      prompt.onclick = async () => {
+        video.muted = false;
+        try {
+          await video.play();
+          prompt.remove();
+        } catch {
+          video.muted = true;
+        }
+      };
+    }
+  }
+
   async function ensurePeerConnection() {
     if (pc) return pc;
+    const iceServers = await createOpenRelayIceServers();
     pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-      ],
+      iceServers,
     });
 
     remoteStream = new MediaStream();
@@ -257,8 +333,7 @@
       } else if (!remoteStream.getTracks().some(track => track.id === event.track.id)) {
         remoteStream.addTrack(event.track);
       }
-      $('#remoteVideoWait')?.remove();
-      $('#msnRemoteVideo')?.play().catch(() => {});
+      playRemoteVideo();
     };
 
     pc.onicecandidate = event => {
@@ -277,6 +352,8 @@
         if (call) call.phase = 'active';
         status.textContent = 'Conversación de vídeo activa';
       } else if (state === 'connecting') {
+        clearTimeout(disconnectTimer);
+        disconnectTimer = null;
         status.textContent = 'Conectando videollamada…';
       } else if (state === 'disconnected') {
         status.textContent = 'Reconectando videollamada…';
@@ -287,7 +364,7 @@
         }, 10000);
       } else if (state === 'failed') {
         status.textContent = 'No fue posible conectar la videollamada';
-        finish(false, 'La conexión de vídeo falló.').catch(() => {});
+        finish(true, 'La conexión de vídeo falló.').catch(() => {});
       }
     };
 
@@ -446,9 +523,16 @@
       { label: 'Rechazar', action: rejectIncoming },
     ]);
     armRingingTimeout();
-    window.MessengerSounds?.playMessage?.();
+    window.MessengerSounds?.startCall?.();
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Messenger Revival', { body: `${call.peerName} te invita a una videollamada.` });
+      try {
+        incomingNotification = new Notification('Messenger Revival', {
+          body: `${call.peerName} te invita a una videollamada.`,
+          tag: `messenger-video-call-${call.id}`,
+          requireInteraction: true,
+          silent: false,
+        });
+      } catch {}
     }
   }
 

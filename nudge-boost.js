@@ -4,6 +4,8 @@
   let audioCtx = null;
   let soundOn = localStorage.getItem('messenger-revival:sound-enabled') !== '0';
   let pendingTone = null;
+  let callRingTimer = null;
+  let callRinging = false;
 
   function context() {
     if (!audioCtx) {
@@ -91,6 +93,51 @@
     });
   }
 
+  function callTone() {
+    const ctx = context();
+    if (!ctx) return;
+    const start = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, start);
+    master.connect(ctx.destination);
+
+    // Two short, clearly audible rings without using an external audio file.
+    [0, 0.22, 0.72, 0.94].forEach(delay => {
+      [440, 523.25].forEach((frequency, index) => {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = index ? 'sine' : 'triangle';
+        oscillator.frequency.setValueAtTime(frequency, start + delay);
+        gain.gain.setValueAtTime(0.0001, start + delay);
+        gain.gain.exponentialRampToValueAtTime(index ? 0.12 : 0.16, start + delay + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + delay + 0.18);
+        oscillator.connect(gain);
+        gain.connect(master);
+        oscillator.start(start + delay);
+        oscillator.stop(start + delay + 0.19);
+      });
+    });
+    master.gain.exponentialRampToValueAtTime(0.9, start + 0.01);
+    master.gain.setValueAtTime(0.9, start + 1.1);
+    master.gain.exponentialRampToValueAtTime(0.0001, start + 1.16);
+  }
+
+  function stopCallTone() {
+    callRinging = false;
+    clearInterval(callRingTimer);
+    callRingTimer = null;
+    if (pendingTone === callTone) pendingTone = null;
+  }
+
+  function startCallTone() {
+    stopCallTone();
+    callRinging = true;
+    scheduleTone(callTone);
+    callRingTimer = setInterval(() => {
+      if (callRinging) scheduleTone(callTone);
+    }, 2600);
+  }
+
   function syncToggle() {
     const button = document.querySelector('#soundToggle');
     if (!button) return;
@@ -168,6 +215,8 @@
     unlock: unlockAudio,
     playMessage: () => scheduleTone(messageTone),
     playNudge: () => scheduleTone(nudgeTone),
+    startCall: startCallTone,
+    stopCall: stopCallTone,
     setEnabled,
     get enabled() { return soundOn; },
   };
