@@ -1,6 +1,6 @@
 (()=>{
 const $=s=>document.querySelector(s);
-let client=null,user=null,activeRoom=null,roomInfo=null,members=[],profiles=new Map(),roomChannel=null,membershipChannel=null,lastPeer=null,openSeq=0,seen=new Set(),membershipTimer=null;
+let client=null,user=null,activeRoom=null,roomInfo=null,members=[],profiles=new Map(),roomChannel=null,membershipChannel=null,lastPeer=null,openSeq=0,seen=new Set(),membershipTimer=null,roomReconnectTimer=null,roomRealtimeReady=false,roomBaselineLoaded=false;
 
 function toast(text){
   const el=$('#toast');if(!el)return;
@@ -243,10 +243,11 @@ function appendMessage(m){
 }
 async function loadMessages(){
   if(!activeRoom)return;
-  seen.clear();const pane=$('#messagePane');if(!pane)return;pane.querySelectorAll('[data-room-message-id],.room-inline-separator').forEach(x=>x.remove());
-  const {data,error}=await client.from('group_messages').select('*').eq('conversation_id',activeRoom).order('created_at',{ascending:true}).limit(500);
+  const id=activeRoom;seen.clear();const pane=$('#messagePane');if(!pane)return;pane.querySelectorAll('[data-room-message-id],.room-inline-separator').forEach(x=>x.remove());
+  const {data,error}=await client.from('group_messages').select('*').eq('conversation_id',id).order('created_at',{ascending:true}).limit(500);
+  if(activeRoom!==id)return;
   if(error){toast(error.message);return}
-  for(const m of data||[])appendMessage(m);
+  for(const m of data||[])appendMessage(m);roomBaselineLoaded=true;
 }
 async function sendText(ev){
   ev?.preventDefault?.();if(!activeRoom)return;
@@ -264,11 +265,15 @@ async function sendSpecial(kind,body){
 function unsubscribeRoom(){
   if(roomChannel&&client)client.removeChannel?.(roomChannel);roomChannel=null;
   clearInterval(membershipTimer);membershipTimer=null;
+  clearTimeout(roomReconnectTimer);roomReconnectTimer=null;roomRealtimeReady=false;roomBaselineLoaded=false;
+}
+function scheduleRoomReconnect(id){
+  clearTimeout(roomReconnectTimer);roomReconnectTimer=setTimeout(()=>{if(activeRoom!==id||roomRealtimeReady)return;subscribeRoom();loadMessages()},1600);
 }
 function subscribeRoom(){
   unsubscribeRoom();if(!activeRoom)return;
   const id=activeRoom;
-  roomChannel=client.channel(`conversation-room-${id}-${crypto.randomUUID()}`)
+  const next=client.channel(`conversation-room-${id}-${crypto.randomUUID()}`)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'group_messages',filter:`conversation_id=eq.${id}`},p=>{
       if(activeRoom!==id)return;appendMessage(p.new);
       if(p.new?.sender_id!==user.id){
@@ -278,12 +283,16 @@ function subscribeRoom(){
       }
     })
     .on('postgres_changes',{event:'*',schema:'public',table:'group_conversation_members',filter:`conversation_id=eq.${id}`},()=>{if(activeRoom===id)loadRoomMeta().then(()=>{if(!ensureParticipantsDialog().hidden)renderParticipants()})})
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles'},p=>{if(activeRoom!==id||!p.new||!members.some(m=>m.user_id===p.new.id))return;profiles.set(p.new.id,p.new);paintRoomHeader();if(!ensureParticipantsDialog().hidden)renderParticipants()})
-    .subscribe();
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles'},p=>{if(activeRoom!==id||!p.new||!members.some(m=>m.user_id===p.new.id))return;profiles.set(p.new.id,p.new);paintRoomHeader();if(!ensureParticipantsDialog().hidden)renderParticipants()});
+  roomChannel=next;next.subscribe(status=>{
+    if(roomChannel!==next||activeRoom!==id)return;
+    if(status==='SUBSCRIBED'){const reconcile=roomBaselineLoaded;roomRealtimeReady=true;clearTimeout(roomReconnectTimer);roomReconnectTimer=null;if(reconcile)loadMessages()}
+    else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){roomRealtimeReady=false;scheduleRoomReconnect(id)}
+  });
   membershipTimer=setInterval(async()=>{
-    if(!activeRoom||document.hidden)return;
-    const {data}=await client.rpc('is_group_member',{p_conversation_id:activeRoom,p_user_id:user.id});
-    if(data===false)handleRemoved();
+    if(!activeRoom||document.hidden||roomRealtimeReady)return;
+    const current=activeRoom,{data}=await client.rpc('is_group_member',{p_conversation_id:current,p_user_id:user.id});
+    if(activeRoom!==current)return;if(data===false)handleRemoved();else await loadMessages();
   },60000);
 }
 function resetInlineRoomUi(){
@@ -302,8 +311,7 @@ async function openRoom(id,{preserveDirect=true}={}){
   const seq=++openSeq;activeRoom=id;const direct=ensureRoomWindow();if(direct){direct.style.display='';direct.hidden=false;direct.classList.remove('window-minimized')}
   const ok=await loadRoomMeta();if(seq!==openSeq||!ok)return;
   if(!preserveDirect)$('#messagePane')?.replaceChildren();
-  await loadMessages();if(seq!==openSeq)return;
-  subscribeRoom();setTimeout(()=>{if(activeRoom===id)loadMessages()},700);
+  subscribeRoom();await loadMessages();if(seq!==openSeq)return;
   const input=$('#messageInput'),fmt=window.MessengerChatFormat?.value;
   if(input&&fmt){input.style.fontFamily=fmt.family||'Tahoma';input.style.fontSize=(fmt.size||11)+'px';input.style.color=fmt.color||'#000';input.style.fontWeight=fmt.bold?'bold':'normal';input.style.fontStyle=fmt.italic?'italic':'normal';input.style.textDecoration=fmt.underline?'underline':'none'}
   input?.focus();
@@ -357,5 +365,5 @@ window.addEventListener('messenger-revival:auth-ready',init);
 window.addEventListener('messenger-revival:auth-signed-out',cleanup);
 window.addEventListener('messenger-revival:conversation-opened',e=>onDirectConversation(e.detail?.peer));
 if(window.MessengerSession?.user)init();
-window.MessengerConversationRoom={openRoom,invite:openInviteDialog,participants:openParticipantsDialog,sendSpecial,get id(){return activeRoom},get active(){return !!activeRoom},get admin(){return roomInfo?.created_by||null}};
+window.MessengerConversationRoom={openRoom,invite:openInviteDialog,participants:openParticipantsDialog,sendSpecial,close:closeRoom,get id(){return activeRoom},get active(){return !!activeRoom},get admin(){return roomInfo?.created_by||null}};
 })();
