@@ -56,20 +56,31 @@ function ensureParticipantsDialog(){
   document.body.appendChild(d);$('#conversationParticipantsClose').onclick=()=>d.hidden=true;return d;
 }
 function ensureRoomWindow(){
-  let w=$('#conversationRoomWindow');if(w)return w;
-  w=document.createElement('section');w.id='conversationRoomWindow';w.className='msn-window chat-window conversation-room-window';w.style.display='none';
-  w.innerHTML='<header class="titlebar"><img class="msn-titlebar-icon" src="assets/community-avatars/invite(1).png" alt=""><b><span id="conversationRoomTitle">Conversation</span> - Conversation</b><div class="caption-buttons"><button type="button" disabled>_</button><button type="button" disabled>□</button><button id="conversationRoomClose" type="button">×</button></div></header><nav class="menubar">File Edit Actions Tools Help</nav><div class="actionbar retro-actionbar"><button id="conversationRoomInvite" type="button"><img src="assets/community-avatars/invite.png?v=3" alt=""><small>Invite</small></button><button id="conversationRoomParticipants" type="button"><img src="assets/status-icons/08-contactos-grupo-dos-usuarios.png" alt=""><small>Participantes</small></button><span id="conversationRoomAdminNote" class="room-admin-note"></span><div class="msn-wordmark" role="img" aria-label="msn"></div></div><div class="conversation-shell"><div class="conversation-main"><div class="to-line room-participants-line">To: <b id="conversationRoomMembers"></b></div><div id="conversationRoomMessages" class="message-pane room-message-pane"></div><div class="compose-toolbar"><button id="conversationRoomSmile" type="button">☺</button><button id="conversationRoomWink" type="button">😉</button><button id="conversationRoomNudge" type="button" class="nudge-visible"><span>((⚡))</span><b>Zumbido</b></button></div><form id="conversationRoomForm" class="composer room-compose"><textarea id="conversationRoomInput"></textarea><div class="send-stack"><button class="send-btn">Send</button></div></form></div></div><footer class="promo-bar">Messenger Revival — conversación con participantes <span class="resize-grip">⋰</span></footer>';
-  document.querySelector('.stage')?.appendChild(w);
-  $('#conversationRoomClose').onclick=closeRoom;
-  $('#conversationRoomInvite').onclick=()=>openInviteDialog();
-  $('#conversationRoomParticipants').onclick=openParticipantsDialog;
-  $('#conversationRoomForm').onsubmit=sendText;
-  $('#conversationRoomSmile').onclick=()=>sendSpecial('emoji','😀');
-  $('#conversationRoomWink').onclick=()=>sendSpecial('emoji','😉');
-  $('#conversationRoomNudge').onclick=()=>sendSpecial('nudge','');
+  const w=$('#chatWindow');if(!w)return null;
+  let pbtn=$('#conversationRoomParticipants');
+  if(!pbtn){
+    pbtn=document.createElement('button');pbtn.id='conversationRoomParticipants';pbtn.type='button';pbtn.hidden=true;
+    pbtn.innerHTML='<img src="assets/status-icons/08-contactos-grupo-dos-usuarios.png" alt=""><small>Participantes</small>';
+    pbtn.onclick=e=>{e.preventDefault();e.stopPropagation();openParticipantsDialog()};
+    const invite=$('#inviteBtn'),bar=w.querySelector('.actionbar');if(invite?.parentNode===bar)invite.after(pbtn);else bar?.prepend(pbtn);
+  }
+  let note=$('#conversationRoomAdminNote');
+  if(!note){note=document.createElement('span');note.id='conversationRoomAdminNote';note.className='room-admin-note';const bar=w.querySelector('.actionbar');bar?.insertBefore(note,bar.querySelector('.service-buttons')||bar.lastChild)}
+  if(!$('#conversationRoomInlineStyle')){const s=document.createElement('style');s.id='conversationRoomInlineStyle';s.textContent='#chatWindow.room-inline-active #chatInfoName{max-width:68%;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}.room-inline-separator{margin:8px 3px;padding:5px 8px;border-top:1px solid #b7ccd9;border-bottom:1px solid #d9e7ef;background:#edf7fc;color:#42657d;font:italic 10px Tahoma}.room-inline-disabled{opacity:.45!important;filter:grayscale(.35)}';document.head.appendChild(s)}
+  if(document.documentElement.dataset.roomInlineCapture!=='1'){
+    document.documentElement.dataset.roomInlineCapture='1';
+    document.addEventListener('submit',e=>{if(!activeRoom||e.target?.id!=='messageForm')return;e.preventDefault();e.stopImmediatePropagation();sendText(e)},true);
+    document.addEventListener('pointerdown',e=>{if(!activeRoom)return;const b=e.target.closest?.('#chatWindow .voice-clip-btn');if(!b)return;e.preventDefault();e.stopImmediatePropagation();toast('Voice Clip está disponible en conversaciones de dos personas.')},true);
+    document.addEventListener('keydown',e=>{if(activeRoom&&e.key==='F2'){e.preventDefault();e.stopImmediatePropagation();toast('Voice Clip está disponible en conversaciones de dos personas.')}},true);
+    document.addEventListener('click',e=>{
+      if(!activeRoom)return;const b=e.target.closest?.('button');if(!b||!b.closest('#chatWindow'))return;
+      if(['sendFilesBtn','videoBtn','voiceBtn'].includes(b.id)){e.preventDefault();e.stopImmediatePropagation();toast('Esta función queda disponible en conversaciones de dos personas.');return}
+      if(b.id==='nudgeBtn'){e.preventDefault();e.stopImmediatePropagation();sendSpecial('nudge','');return}
+      if(b.classList.contains('emoji-btn')&&/emoticon/i.test(b.title||'')){e.preventDefault();e.stopImmediatePropagation();const i=$('#messageInput');if(i){i.value+=(b.dataset.emoji||'😀');i.focus()}return}
+    },true);
+  }
   return w;
 }
-
 function candidateRow(p,onInvite){
   const r=document.createElement('div');r.className='conversation-room-person';
   if(p.display_picture){const img=document.createElement('img');img.src=p.display_picture;img.alt='';r.appendChild(img)}
@@ -120,7 +131,7 @@ async function invitePerson(p,btn){
     if(activeRoom){
       const {error}=await client.rpc('add_member_to_group',{p_conversation_id:activeRoom,p_invitee_id:p.id});
       if(error)throw error;
-      btn.textContent='Invitado';toast(`${p.display_name||p.email} entró a la conversación`);
+      btn.textContent='Invitado';toast(`${p.display_name||p.email} se unió a esta conversación`);
       await loadRoomMeta();
       renderParticipants();
       return;
@@ -131,7 +142,7 @@ async function invitePerson(p,btn){
     if(error)throw error;
     ensureInviteDialog().hidden=true;
     await openRoom(data);
-    toast(`${p.display_name||p.email} fue invitado a esta conversación`);
+    toast(`${p.display_name||p.email} se unió a este mismo chat`);
   }catch(error){
     btn.disabled=false;btn.textContent='Invitar';toast(error?.message||'No se pudo invitar al contacto.');
   }
@@ -191,13 +202,17 @@ async function loadRoomMeta(){
   paintRoomHeader();return true;
 }
 function paintRoomHeader(){
-  const names=members.map(m=>nameOf(m.user_id));
-  $('#conversationRoomMembers').textContent=names.join(', ');
-  $('#conversationRoomTitle').textContent=names.filter(n=>n!==nameOf(user?.id)).slice(0,3).join(', ')||'Conversation';
-  $('#conversationRoomAdminNote').textContent=`Administrador: ${nameOf(roomInfo?.created_by)}`;
-  const invite=$('#conversationRoomInvite');if(invite){invite.disabled=!isAdmin();invite.title=isAdmin()?'Invitar a esta conversación':'Solo el administrador puede invitar participantes'}
+  const names=members.map(m=>nameOf(m.user_id)),others=members.filter(m=>m.user_id!==user?.id).map(m=>nameOf(m.user_id));
+  const info=$('#chatInfoName'),title=$('#chatTitle'),note=$('#conversationRoomAdminNote'),pbtn=$('#conversationRoomParticipants');
+  if(info)info.textContent=names.join(', ');
+  if(title)title.textContent=others.slice(0,3).join(', ')||'Conversation';
+  if(note)note.textContent=`Administrador: ${nameOf(roomInfo?.created_by)}`;
+  if(pbtn)pbtn.hidden=false;
+  const dot=$('#chatStatusDot');if(dot){dot.className='person-icon online';dot.title='Conversación con varios participantes'}
+  const invite=$('#inviteBtn');if(invite){invite.disabled=!isAdmin();invite.title=isAdmin()?'Invitar a esta conversación':'Solo el administrador puede invitar participantes'}
+  $('#chatWindow')?.classList.add('room-inline-active');
+  for(const id of ['sendFilesBtn','videoBtn','voiceBtn'])$('#'+id)?.classList.add('room-inline-disabled');
 }
-
 function messageFormat(){
   const f=window.MessengerChatFormat?.value||{};
   return {
@@ -212,10 +227,13 @@ function messageFormat(){
 function applyFormat(node,format){if(!format||typeof format!=='object')return;for(const k of ['fontFamily','fontSize','color','fontWeight','fontStyle','textDecoration'])if(format[k])node.style[k]=format[k]}
 function appendMessage(m){
   if(!m?.id||seen.has(m.id))return;seen.add(m.id);
-  const pane=$('#conversationRoomMessages');if(!pane)return;pane.querySelector('.room-empty')?.remove();
-  const row=document.createElement('div');row.className='message'+(m.sender_id===user?.id?' mine':'');
+  const pane=$('#messagePane');if(!pane)return;
+  if(!pane.querySelector('.room-inline-separator')){const sep=document.createElement('div');sep.className='room-inline-separator';sep.textContent='Más personas se unieron a esta conversación. Los mensajes nuevos se comparten con todos los participantes.';pane.appendChild(sep)}
+  const row=document.createElement('div');row.className='message'+(m.sender_id===user?.id?' mine':'');row.dataset.roomMessageId=m.id;
   if(m.kind==='nudge'){
     const sys=document.createElement('div');sys.className='room-system';sys.textContent=`${nameOf(m.sender_id)} envió un zumbido.`;row.appendChild(sys);
+  }else if(m.kind==='wink'){
+    const wink=window.MessengerWinks?.item?.(m.body),sys=document.createElement('div');sys.className='msn-wink-history-2005';sys.innerHTML='<b>😉 Guiño:</b> '+(wink?.name||'Guiño animado');row.appendChild(sys);
   }else{
     const meta=document.createElement('div');meta.className='message-meta';meta.textContent=`${nameOf(m.sender_id)} ... dice:`;
     const bubble=document.createElement('div');bubble.className='message-bubble';bubble.textContent=m.body||'';applyFormat(bubble,m.format);row.append(meta,bubble);
@@ -225,25 +243,24 @@ function appendMessage(m){
 }
 async function loadMessages(){
   if(!activeRoom)return;
-  seen.clear();const pane=$('#conversationRoomMessages');pane.innerHTML='';
+  seen.clear();const pane=$('#messagePane');if(!pane)return;pane.querySelectorAll('[data-room-message-id],.room-inline-separator').forEach(x=>x.remove());
   const {data,error}=await client.from('group_messages').select('*').eq('conversation_id',activeRoom).order('created_at',{ascending:true}).limit(500);
-  if(error){pane.textContent=error.message;return}
-  if(!data?.length)pane.innerHTML='<div class="room-empty" style="padding:20px;text-align:center;color:#70808d">La conversación acaba de comenzar.</div>';
+  if(error){toast(error.message);return}
   for(const m of data||[])appendMessage(m);
 }
 async function sendText(ev){
   ev?.preventDefault?.();if(!activeRoom)return;
-  const input=$('#conversationRoomInput'),body=input.value.trim();if(!body)return;
+  const input=$('#messageInput'),body=input?.value.trim();if(!body)return;
   const {data,error}=await client.from('group_messages').insert({conversation_id:activeRoom,sender_id:user.id,kind:'text',body,format:messageFormat()}).select().single();
   if(error)return toast(error.message);input.value='';appendMessage(data);
 }
 async function sendSpecial(kind,body){
-  if(!activeRoom)return;
+  if(!activeRoom)return null;
   const {data,error}=await client.from('group_messages').insert({conversation_id:activeRoom,sender_id:user.id,kind,body}).select().single();
-  if(error)return toast(error.message);appendMessage(data);
-  if(kind==='nudge')window.MessengerSounds?.playNudge?.();
+  if(error){toast(error.message);return null}appendMessage(data);
+  if(kind==='nudge'){const w=$('#chatWindow');w?.classList.remove('nudging');void w?.offsetWidth;w?.classList.add('nudging');window.MessengerSounds?.playNudge?.()}
+  return data;
 }
-
 function unsubscribeRoom(){
   if(roomChannel&&client)client.removeChannel?.(roomChannel);roomChannel=null;
   clearInterval(membershipTimer);membershipTimer=null;
@@ -252,7 +269,14 @@ function subscribeRoom(){
   unsubscribeRoom();if(!activeRoom)return;
   const id=activeRoom;
   roomChannel=client.channel(`conversation-room-${id}-${crypto.randomUUID()}`)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'group_messages',filter:`conversation_id=eq.${id}`},p=>{if(activeRoom!==id)return;appendMessage(p.new);if(p.new?.sender_id!==user.id)window.MessengerSounds?.playMessage?.()})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'group_messages',filter:`conversation_id=eq.${id}`},p=>{
+      if(activeRoom!==id)return;appendMessage(p.new);
+      if(p.new?.sender_id!==user.id){
+        if(p.new?.kind==='wink')window.MessengerWinks?.play?.(p.new.body,{messageId:'group:'+p.new.id});
+        else if(p.new?.kind==='nudge'){const w=$('#chatWindow');w?.classList.remove('nudging');void w?.offsetWidth;w?.classList.add('nudging');window.MessengerSounds?.playNudge?.()}
+        else window.MessengerSounds?.playMessage?.();
+      }
+    })
     .on('postgres_changes',{event:'*',schema:'public',table:'group_conversation_members',filter:`conversation_id=eq.${id}`},()=>{if(activeRoom===id)loadRoomMeta().then(()=>{if(!ensureParticipantsDialog().hidden)renderParticipants()})})
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles'},p=>{if(activeRoom!==id||!p.new||!members.some(m=>m.user_id===p.new.id))return;profiles.set(p.new.id,p.new);paintRoomHeader();if(!ensureParticipantsDialog().hidden)renderParticipants()})
     .subscribe();
@@ -262,29 +286,33 @@ function subscribeRoom(){
     if(data===false)handleRemoved();
   },60000);
 }
-function handleRemoved(){
-  const wasOpen=!!activeRoom;unsubscribeRoom();activeRoom=null;roomInfo=null;members=[];profiles.clear();seen.clear();
-  ensureRoomWindow().style.display='none';ensureInviteDialog().hidden=true;ensureParticipantsDialog().hidden=true;
-  const direct=$('#chatWindow');if(direct&&lastPeer)direct.style.display='';
-  if(wasOpen)toast('Ya no formas parte de esta conversación.');
+function resetInlineRoomUi(){
+  $('#chatWindow')?.classList.remove('room-inline-active');
+  const pbtn=$('#conversationRoomParticipants');if(pbtn)pbtn.hidden=true;
+  const note=$('#conversationRoomAdminNote');if(note)note.textContent='';
+  const invite=$('#inviteBtn');if(invite){invite.disabled=false;invite.title='Invitar a esta conversación'}
+  for(const id of ['sendFilesBtn','videoBtn','voiceBtn'])$('#'+id)?.classList.remove('room-inline-disabled');
+  $('#messagePane')?.querySelectorAll('[data-room-message-id],.room-inline-separator').forEach(x=>x.remove());
 }
-
-async function openRoom(id){
+function handleRemoved(){
+  const wasOpen=!!activeRoom;closeRoom();if(lastPeer)window.MessengerChat?.openContact?.(lastPeer);if(wasOpen)toast('Ya no formas parte de esta conversación.');
+}
+async function openRoom(id,{preserveDirect=true}={}){
   if(!id||!client||!user)return;
-  const seq=++openSeq;activeRoom=id;ensureRoomWindow().style.display='';
-  const direct=$('#chatWindow');if(direct)direct.style.display='none';
+  const seq=++openSeq;activeRoom=id;const direct=ensureRoomWindow();if(direct){direct.style.display='';direct.hidden=false;direct.classList.remove('window-minimized')}
   const ok=await loadRoomMeta();if(seq!==openSeq||!ok)return;
+  if(!preserveDirect)$('#messagePane')?.replaceChildren();
   await loadMessages();if(seq!==openSeq)return;
-  subscribeRoom();
-  const input=$('#conversationRoomInput'),fmt=window.MessengerChatFormat?.value;
+  subscribeRoom();setTimeout(()=>{if(activeRoom===id)loadMessages()},700);
+  const input=$('#messageInput'),fmt=window.MessengerChatFormat?.value;
   if(input&&fmt){input.style.fontFamily=fmt.family||'Tahoma';input.style.fontSize=(fmt.size||11)+'px';input.style.color=fmt.color||'#000';input.style.fontWeight=fmt.bold?'bold':'normal';input.style.fontStyle=fmt.italic?'italic':'normal';input.style.textDecoration=fmt.underline?'underline':'none'}
   input?.focus();
 }
 function closeRoom(){
   ++openSeq;unsubscribeRoom();activeRoom=null;roomInfo=null;members=[];profiles.clear();seen.clear();
-  ensureRoomWindow().style.display='none';ensureInviteDialog().hidden=true;ensureParticipantsDialog().hidden=true;
-  const direct=$('#chatWindow');if(direct&&lastPeer)direct.style.display='';
+  ensureInviteDialog().hidden=true;ensureParticipantsDialog().hidden=true;resetInlineRoomUi();
 }
+
 
 function wireInviteButton(){
   const b=$('#inviteBtn');if(!b||b.dataset.conversationRoomInvite==='1')return;
@@ -292,20 +320,24 @@ function wireInviteButton(){
   b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openInviteDialog()},true);
 }
 async function onDirectConversation(peer){
-  if(!peer||peer.is_self||!user||!client)return;
-  lastPeer={...peer};closeRoom();
+  lastPeer=peer&&!peer.is_self?{...peer}:null;closeRoom();
+  if(!lastPeer||!user||!client)return;
   const seq=++openSeq;
-  const id=await findExistingRoom(peer.id);
-  if(seq!==openSeq||!id)return;
-  await openRoom(id);
+  setTimeout(async()=>{
+    if(seq!==openSeq||!lastPeer)return;
+    const id=await findExistingRoom(lastPeer.id);if(seq!==openSeq||!id)return;
+    await window.MessengerChat?.reload?.();if(seq!==openSeq)return;
+    await openRoom(id,{preserveDirect:true});
+  },260);
 }
+
 function subscribeMemberships(){
   if(membershipChannel&&client)client.removeChannel?.(membershipChannel);
   membershipChannel=client.channel(`conversation-membership-${user.id}-${crypto.randomUUID()}`)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'group_conversation_members',filter:`user_id=eq.${user.id}`},p=>{
       const id=p.new?.conversation_id;if(!id||id===activeRoom)return;
       toast('Te invitaron a una conversación.');
-      openRoom(id);
+      openRoom(id,{preserveDirect:false});
     }).subscribe();
 }
 function removeLegacyGroupUi(){
@@ -314,7 +346,7 @@ function removeLegacyGroupUi(){
 function cleanup(){
   unsubscribeRoom();if(membershipChannel&&client)client.removeChannel?.(membershipChannel);membershipChannel=null;
   activeRoom=null;roomInfo=null;members=[];profiles.clear();seen.clear();user=null;client=null;lastPeer=null;
-  const w=$('#conversationRoomWindow');if(w)w.style.display='none';
+  resetInlineRoomUi();
 }
 async function init(ev){
   cleanup();client=window.MessengerSession?.client||null;user=ev?.detail?.user||window.MessengerSession?.user||null;if(!client||!user)return;
@@ -325,5 +357,5 @@ window.addEventListener('messenger-revival:auth-ready',init);
 window.addEventListener('messenger-revival:auth-signed-out',cleanup);
 window.addEventListener('messenger-revival:conversation-opened',e=>onDirectConversation(e.detail?.peer));
 if(window.MessengerSession?.user)init();
-window.MessengerConversationRoom={openRoom,invite:openInviteDialog,participants:openParticipantsDialog,get id(){return activeRoom},get admin(){return roomInfo?.created_by||null}};
+window.MessengerConversationRoom={openRoom,invite:openInviteDialog,participants:openParticipantsDialog,sendSpecial,get id(){return activeRoom},get active(){return !!activeRoom},get admin(){return roomInfo?.created_by||null}};
 })();
