@@ -55,6 +55,8 @@ function ensureDialog(){
    </div>
    <div id="mpStatus" class="msn-profile-status"></div>
    <div class="msn-profile-footer">
+     <button id="mpStartChat" type="button" hidden>Enviar mensaje</button>
+     <button id="mpRemoveContact" type="button" hidden>Eliminar contacto</button>
      <button id="mpSave" class="primary" type="button" hidden>Guardar</button>
      <button id="mpCancel" type="button">Cerrar</button>
    </div>
@@ -66,6 +68,8 @@ function ensureDialog(){
  $('#mpClose').onclick=close;
  $('#mpCancel').onclick=close;
  $('#mpSave').onclick=saveOwn;
+ $('#mpStartChat').onclick=()=>{if(!currentProfile?.id)return;const target={...currentProfile,is_self:false};close();window.MessengerApp?.openContact?.(target)};
+ $('#mpRemoveContact').onclick=async()=>{if(!currentProfile?.id)return;await window.MessengerContacts?.removeContact?.(currentProfile)};
  $('#mpChangePhoto').onclick=()=>{
    const me=window.MessengerSession?.user;
    const allowed=currentMode==='edit'&&!!me&&currentProfile?.id===me.id;
@@ -129,17 +133,19 @@ async function fetchDetails(userId){
  if(error){console.warn('Profile details load failed',error.message);return {...DEFAULTS}}
  return {...DEFAULTS,...(data||{})};
 }
-async function openContactProfile(){
+async function openContactProfile(target=null){
  ensureDialog();
- const peer=window.MessengerChat?.getActivePeer?.();
- if(!peer){toast('Abre una conversación primero.');return}
- currentMode='view';$('#mpStatus').textContent='Cargando perfil...';
+ const me=window.MessengerSession?.user;
+ const peer=target?.id?target:window.MessengerChat?.getActivePeer?.();
+ if(!peer){toast('Selecciona un contacto primero.');return}
+ if(me?.id===peer.id||peer.is_self)return openOwnProfile();
+ currentMode='view';$('#mpStatus').textContent='Cargando perfil...';dialog.hidden=false;
  const [profile,details]=await Promise.all([fetchProfile(peer.id,peer),fetchDetails(peer.id)]);
- currentProfile=profile;currentDetails=details;
- $('#mpTitle').textContent=`Perfil de ${profile.display_name||profile.email||'contacto'}`;
+ currentProfile={...peer,...profile};currentDetails=details;
+ $('#mpTitle').textContent=`Perfil de ${currentProfile.display_name||currentProfile.email||'contacto'}`;
  $('#mpSectionTitle').textContent='Información del contacto';
- $('#mpView').hidden=false;$('#mpEdit').hidden=true;$('#mpSave').hidden=true;$('#mpChangePhoto').hidden=true;$('#mpChangePhoto').style.display='none';
- putPhoto(profile);renderView(profile,details);$('#mpStatus').textContent='';dialog.hidden=false;
+ $('#mpView').hidden=false;$('#mpEdit').hidden=true;$('#mpSave').hidden=true;$('#mpStartChat').hidden=false;$('#mpRemoveContact').hidden=false;$('#mpChangePhoto').hidden=true;$('#mpChangePhoto').style.display='none';
+ putPhoto(currentProfile);renderView(currentProfile,details);$('#mpStatus').textContent='';
 }
 async function openOwnProfile(){
  ensureDialog();
@@ -150,7 +156,7 @@ async function openOwnProfile(){
  currentProfile=profile;currentDetails=details;
  $('#mpTitle').textContent='Mi perfil personal';
  $('#mpSectionTitle').textContent='Editar mi información';
- $('#mpView').hidden=true;$('#mpEdit').hidden=false;$('#mpSave').hidden=false;$('#mpChangePhoto').hidden=false;$('#mpChangePhoto').style.display='block';
+ $('#mpView').hidden=true;$('#mpEdit').hidden=false;$('#mpSave').hidden=false;$('#mpStartChat').hidden=true;$('#mpRemoveContact').hidden=true;$('#mpChangePhoto').hidden=false;$('#mpChangePhoto').style.display='block';
  putPhoto(profile);renderEdit(profile,details);$('#mpStatus').textContent='';dialog.hidden=false;
 }
 async function saveOwn(){
@@ -213,5 +219,5 @@ window.addEventListener('messenger-revival:profile-updated',ev=>{
  currentProfile={...currentProfile,...ev.detail};putPhoto(currentProfile);renderView(currentProfile,currentDetails||DEFAULTS);
 });
 wireArrows();
-window.MessengerPersonalProfile={openContactProfile,openOwnProfile,close};
+window.MessengerPersonalProfile={openContactProfile,openOwnProfile,openProfile:openContactProfile,close};
 })();
