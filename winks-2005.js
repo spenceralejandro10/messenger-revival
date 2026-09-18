@@ -58,7 +58,13 @@ function play(id,opts={}){
 }
 function receive(detail={}){
   const id=detail.id||detail.messageId||'';
-  const played=play(detail.winkId||detail.body||'wink',{messageId:id});
+  const winkId=detail.winkId||detail.body||'wink';
+  let played=true;
+  if(detail.active===false){
+    if(id&&seen.has(String(id)))return false;
+    if(id)seen.add(String(id));
+    window.MessengerSounds?.playMessage?.();
+  }else played=play(winkId,{messageId:id});
   if(!played)return false;
   const who=detail.who||'Un contacto',toast=document.querySelector('#toast');
   if(toast){toast.textContent=`${who} te envió un guiño: ${item(detail.winkId||detail.body).name}`;toast.classList.add('show');clearTimeout(window.__winkToast);window.__winkToast=setTimeout(()=>toast.classList.remove('show'),2600)}
