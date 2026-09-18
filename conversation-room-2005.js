@@ -46,7 +46,7 @@ function installStyle(){
 function ensureInviteDialog(){
   let d=$('#conversationInviteDialog');if(d)return d;
   d=document.createElement('div');d.id='conversationInviteDialog';d.className='conversation-room-dialog';d.hidden=true;
-  d.innerHTML='<div class="conversation-room-dialog-title">Invitar a esta conversación</div><div class="conversation-room-dialog-body"><div id="conversationInviteHint">Selecciona a quién quieres agregar a esta conversación.</div><div id="conversationInviteList" class="conversation-room-list"></div><div class="conversation-room-dialog-actions"><button id="conversationInviteClose" type="button">Cerrar</button></div></div>';
+  d.innerHTML='<div class="conversation-room-dialog-title">Invitar a esta conversación</div><div class="conversation-room-dialog-body"><div id="conversationInviteHint">Selecciona un contacto para invitar.</div><div id="conversationInviteList" class="conversation-room-list"></div><div class="conversation-room-dialog-actions"><button id="conversationInviteClose" type="button">Cerrar</button></div></div>';
   document.body.appendChild(d);$('#conversationInviteClose').onclick=()=>d.hidden=true;return d;
 }
 function ensureParticipantsDialog(){
@@ -108,18 +108,18 @@ async function openInviteDialog(){
 
   if(activeRoom){
     if(!isAdmin()){hint.textContent=`Administrador: ${nameOf(roomInfo?.created_by)}. Solo el administrador puede agregar participantes.`;box.innerHTML='<div style="padding:12px;color:#677b89">No tienes permisos para invitar personas a esta conversación.</div>';return}
-    hint.textContent='Como administrador, puedes agregar contactos de cualquiera de los participantes.';
+    hint.textContent='Tus contactos disponibles para invitar:';
     ({data,error}=await client.rpc('get_group_invite_candidates',{p_conversation_id:activeRoom}));
   }else{
     const peer=window.MessengerChat?.getActivePeer?.()||lastPeer;
     if(!peer||peer.is_self){box.textContent='Abre una conversación con un contacto primero.';return}
     const existing=await findExistingRoom(peer.id);
     if(existing){d.hidden=true;await openRoom(existing);return openInviteDialog()}
-    hint.textContent='La persona que envió el primer mensaje de este chat será el administrador de la conversación.';
+    hint.textContent='Tus contactos disponibles para invitar:';
     ({data,error}=await client.rpc('get_direct_invite_candidates',{p_peer_id:peer.id}));
   }
 
-  if(error){box.textContent=error.message;return}
+  if(error){console.warn('Invite candidates failed',error);box.innerHTML='<div style="padding:12px;color:#677b89">No se pudieron cargar tus contactos disponibles. Intenta de nuevo.</div>';return}
   box.innerHTML='';
   if(!data?.length){box.innerHTML='<div style="padding:12px;color:#677b89">No hay contactos disponibles para invitar.</div>';return}
   for(const p of data)box.appendChild(candidateRow(p,invitePerson));
